@@ -8,8 +8,8 @@ import {
   socketTeamUpdated,
 } from "../store/slices/dataSlice";
 import { socket, SOCKET_EVENTS } from "../services/socket";
-import { mapTask, mapTeam } from "../services/apiService";
 import type { AppDispatch } from "../store/store";
+import { mapTask, mapTeam } from "@/helpers/maper";
 
 export const useTeamSocket = (activeTeamId?: string) => {
   const dispatch = useDispatch<AppDispatch>();

@@ -1,4 +1,4 @@
-
+const BASE_URL="https://task-monitor-backend-service.onrender.com/api/v1"
 export const KEYS = {
   USERS: "taskflow_users",
   TASKS: "taskflow_tasks",
@@ -32,8 +32,8 @@ export async function request(
     headers,
     credentials: "include",
   };
-
-  const response = await fetch(`${process.env.BASE_URL}${endpoint}`, config);
+//   console.log(process.env.BASE_URL);
+  const response = await fetch(`${BASE_URL}${endpoint}`, config);
 
   // Handle Token Refresh (401 Unauthorized)
   if (
@@ -42,11 +42,14 @@ export async function request(
     !endpoint.includes("/auth/login")
   ) {
     try {
-      const refreshResponse = await fetch(`${process.env.BASE_URL}/auth/refreshToken`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
+      const refreshResponse = await fetch(
+        `${BASE_URL}/auth/refreshToken`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+      );
 
       if (refreshResponse.ok) {
         const refreshResult = await refreshResponse.json();
