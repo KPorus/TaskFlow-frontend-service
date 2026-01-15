@@ -1,5 +1,5 @@
 {
   "name": "TaskFlow - Realtime Kanban",
-  "description": "A collaborative task management system with real-time updates, team management, and drag-and-drop Kanban boards. Built with React, Redux, and Tailwind.",
+  "description": "A collaborative task management system with real-time updates, team management, and drag-and-drop task boards. Built with React, Redux, and Tailwind.",
   "requestFramePermissions": []
 }

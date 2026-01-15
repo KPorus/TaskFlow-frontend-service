@@ -14,7 +14,7 @@ export const DashboardHome: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center text-gray-400 p-4 text-center">
+    <div id="daskboard-component-ts" className="flex-1 flex flex-col items-center justify-center text-gray-400 p-4 text-center">
       <p>Select a team from the sidebar or create a new one to get started.</p>
     </div>
   );

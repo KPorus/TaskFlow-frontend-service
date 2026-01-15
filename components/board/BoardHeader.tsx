@@ -23,7 +23,7 @@ export const BoardHeader: React.FC<Props> = ({
       .map((m) => m.user as User) || [];
 
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-8 flex-shrink-0 z-10">
+    <header id="board-view-header--ts" className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-8 flex-shrink-0 z-10">
       <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
         <button
           onClick={onOpenSidebar}

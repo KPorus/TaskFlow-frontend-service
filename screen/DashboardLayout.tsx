@@ -2,7 +2,7 @@ import { AppDispatch, RootState } from "@/store/store";
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Outlet } from "react-router-dom";
-import { Sidebar } from "./Sidebar";
+import { Sidebar } from "../components/layout/Sidebar";
 import { useTeamSocket } from "@/hooks/useTeamSocket";
 import { fetchTeams } from "@/store/slices/helper/dataThunks";
 
@@ -20,7 +20,7 @@ export const DashboardLayout: React.FC = () => {
   useTeamSocket(activeTeamId);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div id="dashboard-screen-ts" className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {isSidebarOpen && (
@@ -30,7 +30,7 @@ export const DashboardLayout: React.FC = () => {
         />
       )}
 
-      <main className="flex-1 flex flex-col h-full overflow-hidden w-full relative">
+      <main id="dashboard-home-component--ts" className="flex-1 flex flex-col h-full overflow-hidden w-full relative">
         <Outlet context={{ setSidebarOpen }} />
       </main>
     </div>

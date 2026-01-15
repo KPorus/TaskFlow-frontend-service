@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store/store';
-import { Layout, ArrowRight, Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
+import { Layout, ArrowRight, Lock, Mail, User } from 'lucide-react';
 import { loginUser, registerUser } from '@/store/slices/helper/authThunks';
 
 export const AuthScreen: React.FC = () => {
@@ -12,7 +12,7 @@ export const AuthScreen: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +24,7 @@ export const AuthScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div id="auth-screen--ts" className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
         <div className="p-10 text-center bg-indigo-600 relative overflow-hidden">
            <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
@@ -33,7 +33,7 @@ export const AuthScreen: React.FC = () => {
            </div>
            
            <div className="relative z-10">
-             <div className="mx-auto bg-white/20 w-14 h-14 rounded-xl flex items-center justify-center text-white mb-4 backdrop-blur-md border border-white/30 shadow-lg">
+             <div id="Logo" className="mx-auto bg-white/20 w-14 h-14 rounded-xl flex items-center justify-center text-white mb-4 backdrop-blur-md border border-white/30 shadow-lg">
                <Layout size={28} />
              </div>
              <h1 className="text-3xl font-bold text-white tracking-tight">TaskFlow</h1>
@@ -98,13 +98,13 @@ export const AuthScreen: React.FC = () => {
                    className="w-full pl-11 pr-12 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all placeholder:text-gray-400"
                    placeholder="••••••••"
                  />
-                 <button 
+                 {/* <button 
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                  >
                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                 </button>
+                 </button> */}
                </div>
              </div>
 

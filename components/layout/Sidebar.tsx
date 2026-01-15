@@ -48,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   return (
     <>
-      <div 
+      <div id="sideber-component-ts"
         className={`
           fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-white flex flex-col h-full border-r border-slate-800 
           transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto

@@ -27,6 +27,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, assignee, onDragStart,
 
   return (
     <div
+    id="task-card--ts"
       draggable
       onDragStart={(e) => onDragStart(e, task.id)}
       onClick={() => onClick(task)}

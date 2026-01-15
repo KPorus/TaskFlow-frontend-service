@@ -5,7 +5,7 @@ import { RootState, AppDispatch } from "./store/store";
 import { AuthScreen } from "./components/auth/AuthScreen";
 
 import { BoardView } from "./components/board/BoardView";
-import { DashboardLayout } from "./components/layout/DashboardLayout";
+import { DashboardLayout } from "./screen/DashboardLayout";
 import { DashboardHome } from "./components/layout/DashboardHome";
 import { loadUser } from "./store/slices/helper/authThunks";
 

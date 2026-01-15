@@ -160,7 +160,7 @@ export const BoardView: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div id="board-view-component--ts" className="flex flex-col h-full w-full">
       <BoardHeader
         team={currentTeam as Team | undefined}
         isOwner={!!isOwner}
@@ -168,7 +168,7 @@ export const BoardView: React.FC = () => {
         onOpenTeamSettings={() => setIsTeamSettingsOpen(true)}
       />
 
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-4 sm:p-6 bg-gray-50">
+      <div id="board-view-body--ts" className="flex-1 overflow-x-auto overflow-y-hidden p-4 sm:p-6 bg-gray-50">
         <div className="h-full flex gap-4 sm:gap-6 min-w-full lg:min-w-max pb-2">
           {Object.values(TaskStatus).map((status) => (
             <BoardColumn

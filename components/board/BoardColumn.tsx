@@ -42,7 +42,7 @@ export const BoardColumn: React.FC<BoardColumnProps> = ({
   const getAssignee = (id?: string) => users.find(u => u.id === id);
 
   return (
-    <div 
+    <div id="board-view-body-column--ts"
       className="flex flex-col bg-gray-100 rounded-lg w-[85vw] sm:w-80 h-full max-h-full flex-shrink-0 snap-center"
       onDragOver={handleDragOver}
       onDrop={handleDrop}
@@ -60,7 +60,7 @@ export const BoardColumn: React.FC<BoardColumnProps> = ({
         </button>
       </div>
       
-      <div className="flex-1 p-2 overflow-y-auto no-scrollbar">
+      <div id="task-card-component--ts" className="flex-1 p-2 overflow-y-auto no-scrollbar">
         {tasks.map(task => (
           <TaskCard 
             key={task.id} 
