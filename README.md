@@ -1,51 +1,72 @@
-# TaskFlow - MERN Stack Real-time Kanban System
+# TaskFlow
 
-## Overview
+**A Real-time, Jira-inspired Collaborative Task Management System.**
 
-TaskFlow is a multi-user task management application designed with a focus on real-time collaboration. It implements a Kanban-style board where users can create, update, and drag-and-drop tasks.
+TaskFlow is a modern SaaS platform designed for agile teams to track workflows, manage projects, and collaborate in real-time. Built using the **MERN** stack (MongoDB, Express, React, Node.js), it creates a seamless, app-like experience within the browser.
 
-## Architecture & Technology Stack
+## 🚀 Architectural Philosophy: The Team-Centric Model
 
-While this demo runs entirely in the browser for preview purposes, it is architected to reflect a full MERN stack application.
+TaskFlow adopts a scalable, **Team-Centric Permission Model** (similar to Slack, Asana, or Jira Cloud), rather than a rigid global hierarchy.
+
+### How it Works:
+1.  **Unified Identity**: A user creates a single account (Global Identity). This account exists independently of any specific organization or team.
+2.  **Contextual Roles**: Roles are **scoped strictly to the Team level**, not the application level.
+    *   **Team Owner**: Any user can create a new Team. The creator automatically becomes the **Owner** of that specific workspace. They have full control (add/remove members, delete team).
+    *   **Member**: A user can be invited to join other teams. In those contexts, they are strictly a **Member** with read/write access to tasks but no administrative privileges over the team itself.
+3.  **Flexibility**: A single user can be the **Owner** of "Engineering Team" while simultaneously being a **Member** of "Marketing Team".
+
+This approach allows for organic growth, multi-tenancy, and high scalability without requiring a central "Super Admin" to provision every workspace.
+
+## ✨ Key Features
+
+*   **Real-Time Collaboration**: Updates to tasks, columns, and team membership flow instantly to all connected clients via **Socket.IO**.
+*   **Kanban Board**: Drag-and-drop interface for managing task status (Todo, In Progress, Done).
+*   **Team Management**: dynamic member invites, role management, and team switching.
+*   **Reactive UI**: Built with React 18, Redux Toolkit, and optimistic UI updates for a snappy feel.
+*   **Secure Authentication**: JWT-based stateless authentication with automatic token refreshing.
+
+## 🛠 Technology Stack
 
 ### Frontend
-- **React 18**: UI Library using Functional Components and Hooks.
-- **Redux Toolkit**: Global state management for Auth, Teams, and Tasks.
-- **Tailwind CSS**: Utility-first styling.
-- **TypeScript**: Type safety across the application.
-- **HTML5 Drag & Drop**: Native API for board interactions.
+*   **React 18**: Component-based UI library.
+*   **Redux Toolkit**: State management for predictable data flow.
+*   **TypeScript**: Static typing for robustness and maintainability.
+*   **Tailwind CSS**: Utility-first CSS framework for rapid styling.
+*   **Socket.IO Client**: For bi-directional event-based communication.
+*   **React Router v6**: Client-side routing.
 
-### Backend (Simulated in `services/mockBackend.ts`)
-This project mocks the behavior of the requested **Nest.js** backend:
-- **Authentication**: Simulates JWT issuance and validation.
-- **Database**: Simulates **MongoDB** schema and operations using `localStorage`.
-- **Real-time**: Simulates **Socket.IO** events using `BroadcastChannel` API. This allows you to open the app in two different browser tabs and see updates reflect instantly in both.
+### Backend (API)
+The frontend connects to a remote REST/WebSocket API (hosted at render) which implements:
+*   **Express**: Progressive Node.js framework.
+*   **MongoDB**: NoSQL database for flexible data schemas (Tasks, Users, Teams).
+*   **Socket.IO Gateway**: Handling real-time event broadcasting.
 
-## How to Test Real-Time Features
+## 📦 Installation & Setup
 
-1. Open the application in **Tab A**.
-2. Login as `alice@example.com`.
-3. Open the application in **Tab B**.
-4. Login as `bob@example.com`.
-5. In Tab A, drag a task from "To Do" to "In Progress".
-6. Watch Tab B update instantly without refreshing.
-7. Create a new task in Tab B; it will appear in Tab A.
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/yourusername/taskflow.git
+    cd taskflow
+    ```
 
-## Planned Backend Structure (NodeJs)
+2.  **Install Dependencies**
+    ```bash
+    pnpm install
+    ```
 
-If this were deployed to a real server, the structure would be:
+3.  **Run Development Server**
+    ```bash
+    pnpm dev
+    ```
+    The app will run at `http://localhost:3000` (or the port configured by your bundler).
 
-```
-src/
-  auth/           # JWT Strategy & Guards
-  users/          # User Entity & Service
-  teams/          # Team Entity & Service
-  tasks/          # Task Entity & Service
-  gateway/        # WebSocket Gateway (Socket.IO)
-```
+## 🧪 Testing the Real-Time Logic
 
-## Running the App
+To experience the collaborative nature of TaskFlow:
 
-Since this is a client-side preview:
-1. Ensure dependencies (`react`, `react-dom`, `@reduxjs/toolkit`, `react-redux`, `lucide-react`) are installed.
-2. Run with Vite or Create React App.
+1.  Open **Browser Window A** and log in (or register) as User 1.
+2.  Create a Team (e.g., "Alpha Squad").
+3.  Open **Browser Window B** (Incognito/Private) and register as User 2.
+4.  In Window A, add User 2 to "Alpha Squad".
+5.  *Watch as the team instantly appears in Window B's sidebar.*
+6.  Drag a task in Window A; observe it move instantly in Window B.
