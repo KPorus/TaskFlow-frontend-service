@@ -47,6 +47,7 @@ const dataSlice = createSlice({
       .addCase(createTeam.fulfilled, (state, action) => {
         state.teams.push(action.payload);
         state.activeTeamId = action.payload.id;
+        state.tasks = [];
       })
       .addCase(deleteTeam.fulfilled, (state, action) => {
         state.teams = state.teams.filter((t) => t.id !== action.payload);
@@ -63,6 +64,11 @@ const dataSlice = createSlice({
       })
       .addCase(fetchTasks.fulfilled, (state, action) => {
         state.tasks = action.payload;
+      })
+      .addCase(fetchTasks.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.tasks = []; 
       })
       .addCase(fetchAllUsers.fulfilled, (state, action) => {
         state.users = action.payload;
