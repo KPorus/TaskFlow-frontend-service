@@ -5,7 +5,7 @@ export const applySocketTaskCreated = (
   state: DataState,
   action: PayloadAction<Task>
 ) => {
-  if (state.activeTeamId === action.payload.teamId) {
+  if (state.activeProjectId === action.payload.projectId) {
     if (!state.tasks.find((t) => t.id === action.payload.id)) {
       state.tasks.push(action.payload);
     }

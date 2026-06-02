@@ -3,12 +3,10 @@ import { useSelector, useDispatch } from "react-redux";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { RootState, AppDispatch } from "./store/store";
 import { AuthScreen } from "./components/auth/AuthScreen";
-
 import { BoardView } from "./components/board/BoardView";
 import { DashboardLayout } from "./screen/DashboardLayout";
-import { DashboardHome } from "./components/layout/DashboardHome";
+import { DashboardHome } from "./components/dashboard/DashboardHome";
 import { loadUser } from "./store/slices/helper/authThunks";
-
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -45,7 +43,7 @@ const App: React.FC = () => {
           }
         >
           <Route index element={<DashboardHome />} />
-          <Route path=":teamId" element={<BoardView />} />
+          <Route path="projects/:projectId" element={<BoardView />} />
         </Route>
 
         <Route

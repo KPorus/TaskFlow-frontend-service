@@ -1,5 +1,6 @@
-// const BASE_URL="http://localhost:5001/api/v1"
-const BASE_URL="https://task-monitor-backend-service.onrender.com/api/v1"
+const BASE_URL =
+  import.meta.env.VITE_BASE_URL || "http://localhost:5000/api/v1";
+
 export const KEYS = {
   USERS: "taskflow_users",
   TASKS: "taskflow_tasks",
@@ -7,10 +8,6 @@ export const KEYS = {
   USER_DATA: "taskflow_user",
 };
 
-/**
- * Core Request Wrapper
- * Handles Authorization headers, JSON content types, and automatic token refresh.
- */
 export async function request(
   endpoint: string,
   options: RequestInit = {},
@@ -19,7 +16,6 @@ export async function request(
   const token = localStorage.getItem(KEYS.TOKEN);
   const headers = new Headers(options.headers);
 
-  // Explicitly set Authorization header as required
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
@@ -33,31 +29,27 @@ export async function request(
     headers,
     credentials: "include",
   };
-//   console.log(process.env.BASE_URL);
+
   const response = await fetch(`${BASE_URL}${endpoint}`, config);
 
-  // Handle Token Refresh (401 Unauthorized)
   if (
     response.status === 401 &&
     !isRetry &&
     !endpoint.includes("/auth/login")
   ) {
     try {
-      const refreshResponse = await fetch(
-        `${BASE_URL}/auth/refreshToken`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        }
-      );
+      const refreshResponse = await fetch(`${BASE_URL}/auth/refreshToken`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
 
       if (refreshResponse.ok) {
         const refreshResult = await refreshResponse.json();
         const authHeader = refreshResponse.headers.get("Authorization");
         const newToken = authHeader
           ? authHeader.replace("Bearer ", "")
-          : refreshResult.data;
+          : refreshResult.data?.accessToken || refreshResult.data;
 
         if (newToken) {
           localStorage.setItem(KEYS.TOKEN, newToken);

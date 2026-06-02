@@ -1,8 +1,8 @@
-// TaskFormModal.tsx
 import React, { useEffect, useState } from "react";
 import { Modal } from "../ui/Modal";
-import { Task, TaskPriority, User } from "../../types";
-import { Trash2 } from "lucide-react";
+import { Task, TaskPriority, User, Comment } from "../../types";
+import { Trash2, Send } from "lucide-react";
+import { ApiService } from "@/services/apiService";
 
 interface Props {
   isOpen: boolean;
@@ -34,6 +34,8 @@ export const TaskFormModal: React.FC<Props> = ({
   const [priority, setPriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
   const [assigneeId, setAssigneeId] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentText, setCommentText] = useState("");
 
   useEffect(() => {
     if (task) {
@@ -42,13 +44,16 @@ export const TaskFormModal: React.FC<Props> = ({
       setPriority(task.priority);
       setAssigneeId(task.assigneeId || "");
       setDueDate(task.dueDate ? task.dueDate.split("T")[0] : "");
+      ApiService.comments.list(task.id).then(setComments).catch(() => {});
     } else {
       setTitle("");
       setDescription("");
       setPriority(TaskPriority.MEDIUM);
       setAssigneeId("");
       setDueDate("");
+      setComments([]);
     }
+    setCommentText("");
   }, [task]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -62,6 +67,14 @@ export const TaskFormModal: React.FC<Props> = ({
     });
   };
 
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!task || !commentText.trim()) return;
+    const comment = await ApiService.comments.create(task.id, commentText);
+    setComments((prev) => [comment, ...prev]);
+    setCommentText("");
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -69,7 +82,6 @@ export const TaskFormModal: React.FC<Props> = ({
       title={task ? "Edit Task" : "New Task"}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Title */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Title
@@ -83,7 +95,6 @@ export const TaskFormModal: React.FC<Props> = ({
           />
         </div>
 
-        {/* Description */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Description
@@ -96,7 +107,6 @@ export const TaskFormModal: React.FC<Props> = ({
           />
         </div>
 
-        {/* Priority + Due Date */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -107,7 +117,7 @@ export const TaskFormModal: React.FC<Props> = ({
               onChange={(e) =>
                 setPriority(e.target.value as TaskPriority)
               }
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
             >
               {Object.values(TaskPriority).map((p) => (
                 <option key={p} value={p}>
@@ -123,13 +133,13 @@ export const TaskFormModal: React.FC<Props> = ({
             <input
               type="date"
               value={dueDate}
+              min={new Date().toISOString().split("T")[0]}
               onChange={(e) => setDueDate(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
             />
           </div>
         </div>
 
-        {/* Assignee */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Assignee
@@ -137,7 +147,7 @@ export const TaskFormModal: React.FC<Props> = ({
           <select
             value={assigneeId}
             onChange={(e) => setAssigneeId(e.target.value)}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
           >
             <option value="">Unassigned</option>
             {users.map((u) => (
@@ -148,13 +158,49 @@ export const TaskFormModal: React.FC<Props> = ({
           </select>
         </div>
 
-        {/* Actions */}
+        {task && (
+          <div className="border-t pt-4">
+            <h4 className="text-sm font-semibold text-gray-700 mb-2">
+              Comments
+            </h4>
+            <div className="max-h-32 overflow-y-auto space-y-2 mb-3">
+              {comments.map((c) => (
+                <div
+                  key={c.id}
+                  className="text-sm bg-gray-50 p-2 rounded border"
+                >
+                  <span className="font-medium">{c.authorName || "User"}</span>
+                  <p className="text-gray-600">{c.text}</p>
+                </div>
+              ))}
+              {comments.length === 0 && (
+                <p className="text-xs text-gray-400">No comments yet</p>
+              )}
+            </div>
+            <form onSubmit={handleAddComment} className="flex gap-2">
+              <input
+                type="text"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Add a comment..."
+                className="flex-1 border border-gray-300 rounded-md p-2 text-sm"
+              />
+              <button
+                type="submit"
+                className="p-2 bg-indigo-600 text-white rounded-md"
+              >
+                <Send size={16} />
+              </button>
+            </form>
+          </div>
+        )}
+
         <div className="flex justify-between items-center mt-6 pt-2">
           {canDelete ? (
             <button
               type="button"
               onClick={onRequestDelete}
-              className="flex items-center text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              className="flex items-center text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-md text-sm font-medium"
             >
               <Trash2 size={16} className="mr-2" />
               Delete

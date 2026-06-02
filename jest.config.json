@@ -1,0 +1,29 @@
+{
+  "roots": ["<rootDir>/src"],
+  "moduleNameMapper": {
+    "^@modules/(.*)$": "<rootDir>/src/modules/$1",
+    "^@utils/(.*)$": "<rootDir>/src/utils/$1",
+    "^@config/(.*)$": "<rootDir>/src/config/$1",
+    "^@middlewares/(.*)$": "<rootDir>/src/middlewares/$1",
+    "^@types/(.*)$": "<rootDir>/src/types/$1",
+    "^@handlers/(.*)$": "<rootDir>/src/handlers/$1",
+    "^@/(.*)$": "<rootDir>/src/$1"
+  },
+  "testTimeout": 30000,
+  "verbose": true,
+  "globalSetup": "<rootDir>/src/tests/setup/global-setup.ts",
+  "globalTeardown": "<rootDir>/src/tests/setup/global-teardown.ts",
+  "testEnvironment": "node",
+  "setupFilesAfterEnv": [],
+  "preset": "ts-jest",
+  "testMatch": ["**/__tests__/**/*.ts", "**/?(*.)+(spec|test).ts"],
+  "moduleFileExtensions": ["ts", "js", "json", "node"],
+  "transform": {
+    "^.+\\.ts?$": [
+      "ts-jest",
+      {
+        "tsconfig": "tsconfig.json"
+      }
+    ]
+  }
+}

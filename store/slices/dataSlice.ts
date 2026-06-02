@@ -1,18 +1,23 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { DataState } from "../../types";
-import { applyTeamUpdated,setActiveTeam, applyDeleteTeam } from "./helper/teamReducers";
+import {
+  applyProjectUpdated,
+  setActiveProject,
+  applyDeleteProject,
+} from "./helper/projectReducers";
 import { socketReducers } from "./helper/socketReducers";
 import {
-  addTeamMember,
+  addProjectMember,
   createTask,
-  createTeam,
+  createProject,
   deleteTask,
-  deleteTeam,
+  deleteProject,
   fetchAllUsers,
   fetchTasks,
-  fetchTeams,
-  removeTeamMember,
+  fetchProjects,
+  removeProjectMember,
   updateTask,
+  updateProject,
 } from "./helper/dataThunks";
 import {
   applySocketTaskCreated,
@@ -21,10 +26,13 @@ import {
 } from "./helper/taskReducers";
 
 const initialState: DataState = {
-  teams: [],
+  projects: [],
   tasks: [],
   users: [],
-  activeTeamId: null,
+  activeProjectId: null,
+  taskTotal: 0,
+  taskPage: 1,
+  taskTotalPages: 1,
   loading: false,
   error: null,
 };
@@ -33,41 +41,39 @@ const dataSlice = createSlice({
   name: "data",
   initialState,
   reducers: {
-    setActiveTeam,
+    setActiveProject,
     ...socketReducers,
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchTeams.fulfilled, (state, action) => {
-        state.teams = action.payload;
-        if (!state.activeTeamId && action.payload.length > 0) {
-          state.activeTeamId = action.payload[0].id;
+      .addCase(fetchProjects.fulfilled, (state, action) => {
+        state.projects = action.payload;
+        if (!state.activeProjectId && action.payload.length > 0) {
+          state.activeProjectId = action.payload[0].id;
         }
       })
-      .addCase(createTeam.fulfilled, (state, action) => {
-        state.teams.push(action.payload);
-        state.activeTeamId = action.payload.id;
-        // applyCreateTeam(state,action)
+      .addCase(createProject.fulfilled, (state, action) => {
+        state.projects.push(action.payload);
+        state.activeProjectId = action.payload.id;
       })
-      .addCase(deleteTeam.fulfilled, (state, action) => {
-        applyDeleteTeam(state, action)
-        // console.log(action.payload);
-        // state.teams = state.teams.filter((t) => t.id !== action.payload);
-        // if (state.activeTeamId === action.payload) {
-        //   state.activeTeamId =
-        //     state.teams.length > 0 ? state.teams[0].id : null;
-        // }
+      .addCase(updateProject.fulfilled, (state, action) => {
+        applyProjectUpdated(state, action);
       })
-      .addCase(addTeamMember.fulfilled, (state, action) => {
-        applyTeamUpdated(state, action);
+      .addCase(deleteProject.fulfilled, (state, action) => {
+        applyDeleteProject(state, action);
       })
-      .addCase(removeTeamMember.fulfilled, (state, action) => {
-        console.log(state,action);
-        applyTeamUpdated(state, action);
+      .addCase(addProjectMember.fulfilled, (state, action) => {
+        applyProjectUpdated(state, action);
+      })
+      .addCase(removeProjectMember.fulfilled, (state, action) => {
+        applyProjectUpdated(state, action);
       })
       .addCase(fetchTasks.fulfilled, (state, action) => {
-        state.tasks = action.payload;
-        state.loading=false;
+        state.tasks = action.payload.tasks;
+        state.taskTotal = action.payload.total;
+        state.taskPage = action.payload.page;
+        state.taskTotalPages = action.payload.totalPages;
+        state.loading = false;
       })
       .addCase(fetchTasks.pending, (state) => {
         state.loading = true;
@@ -89,13 +95,12 @@ const dataSlice = createSlice({
 });
 
 export const {
-  setActiveTeam: setActiveTeamAction,
+  setActiveProject: setActiveProjectAction,
   socketTaskCreated,
   socketTaskUpdated,
   socketTaskDeleted,
-  socketTeamUpdated,
-  socketTeamDelete
-  // socketTeamCreated,
+  socketProjectUpdated,
+  socketProjectDelete,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   useParams,
@@ -12,19 +12,30 @@ import {
   createTask,
   fetchTasks,
   deleteTask,
-  deleteTeam,
+  deleteProject,
   fetchAllUsers,
-  addTeamMember,
-  removeTeamMember,
-  fetchTeams,
+  addProjectMember,
+  removeProjectMember,
 } from "../../store/slices/helper/dataThunks";
-import { TaskStatus, TaskPriority, Task, User, Team } from "../../types";
+import {
+  TaskStatus,
+  TaskPriority,
+  Task,
+  User,
+  Project,
+  UserRole,
+  TaskListFilters,
+} from "../../types";
 import { BoardColumn } from "./BoardColumn";
 import { BoardHeader } from "./BoardHeader";
 import { TaskFormModal } from "../model/TaskFormModal";
 import { DeleteTaskConfirmModal } from "../model/DeleteTaskConfirmModal";
-import { TeamSettingsModal } from "../model/TeamSettingsModal";
-import { setActiveTeamAction } from "@/store/slices/dataSlice";
+import { ProjectSettingsModal } from "../model/ProjectSettingsModal";
+import { setActiveProjectAction } from "@/store/slices/dataSlice";
+import { SearchBar } from "../search/SearchBar";
+import { TaskFilters } from "../search/TaskFilters";
+import { SortControls } from "../search/SortControls";
+import { Pagination } from "../search/Pagination";
 
 interface DashboardContext {
   setSidebarOpen: (isOpen: boolean) => void;
@@ -33,59 +44,91 @@ interface DashboardContext {
 export const BoardView: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { teamId } = useParams<{ teamId: string }>();
+  const { projectId } = useParams<{ projectId: string }>();
   const { setSidebarOpen } = useOutletContext<DashboardContext>();
 
-  const { tasks, users, teams } = useSelector((state: RootState) => state.data);
+  const { tasks, users, projects, taskPage, taskTotalPages } = useSelector(
+    (state: RootState) => state.data
+  );
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
-  // let currentTeam = teams.find((t) => t.id === teamId);
 
-  const teamdata = teams.find((t) => t.id === teamId);
+  const projectData = projects.find((p) => p.id === projectId);
 
-  const activeTeamId = React.useMemo(() => {
-    if (teamdata?.id) return teamdata.id;
-    if (teams.length > 0) return teams[0].id;
+  const activeProjectId = React.useMemo(() => {
+    if (projectData?.id) return projectData.id;
+    if (projects.length > 0) return projects[0].id;
     return null;
-  }, [teamdata, teams]);
+  }, [projectData, projects]);
 
-  const currentTeam = React.useMemo(() => {
-    if (!activeTeamId) return null;
-    return teams.find((t) => t.id === activeTeamId) || null;
-  }, [activeTeamId, teams]);
+  const currentProject = React.useMemo(() => {
+    if (!activeProjectId) return null;
+    return projects.find((p) => p.id === activeProjectId) || null;
+  }, [activeProjectId, projects]);
 
-  // const activeTeamId = React.useMemo(() => {
-  //   if (currentTeam?.id) return teamId;
-  //   if (teams?.length) return teams[0].id;
-  //   return null;
-  // }, [currentTeam, teamId, teams]);
-  // if (!currentTeam) {
-  //   currentTeam = teams.find((t) => t.id === activeTeamId);
-  // }
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [isTeamSettingsOpen, setIsTeamSettingsOpen] = useState(false);
+  const [isProjectSettingsOpen, setIsProjectSettingsOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [newTaskStatus, setNewTaskStatus] = useState<TaskStatus>(
-    TaskStatus.TODO
-  );
-  // console.log("team", currentTeam);
-  // console.log("tasks", tasks);
-  // console.log(activeTeamId);
-  useEffect(() => {
-    if (!activeTeamId) return;
+  const [newTaskStatus, setNewTaskStatus] = useState<TaskStatus>(TaskStatus.TODO);
 
-    dispatch(setActiveTeamAction(activeTeamId));
-    dispatch(fetchTasks(activeTeamId));
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState<TaskStatus | "">("");
+  const [filterPriority, setFilterPriority] = useState<TaskPriority | "">("");
+  const [filterAssignee, setFilterAssignee] = useState("");
+  const [filterDeadline, setFilterDeadline] = useState<
+    "" | "UPCOMING" | "OVERDUE"
+  >("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const loadTasks = useCallback(() => {
+    if (!activeProjectId) return;
+    const filters: TaskListFilters = {
+      search: debouncedSearch || undefined,
+      status: filterStatus ? [filterStatus] : undefined,
+      priority: filterPriority ? [filterPriority] : undefined,
+      assignee: filterAssignee || undefined,
+      deadlineStatus: filterDeadline || undefined,
+      sortBy: sortBy as TaskListFilters["sortBy"],
+      sortOrder,
+      page,
+      limit: 50,
+    };
+    dispatch(
+      fetchTasks({ projectId: activeProjectId, filters })
+    );
+  }, [
+    activeProjectId,
+    debouncedSearch,
+    filterStatus,
+    filterPriority,
+    filterAssignee,
+    filterDeadline,
+    sortBy,
+    sortOrder,
+    page,
+    dispatch,
+  ]);
+
+  useEffect(() => {
+    if (!activeProjectId) return;
+    dispatch(setActiveProjectAction(activeProjectId));
     dispatch(fetchAllUsers());
-  }, [activeTeamId, teamId, dispatch]);
+  }, [activeProjectId, projectId, dispatch]);
+
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
 
   const handleDropTask = (taskId: string, newStatus: TaskStatus) => {
-    dispatch(
-      updateTask({
-        taskId,
-        updates: { status: newStatus },
-      })
-    );
+    dispatch(updateTask({ taskId, updates: { status: newStatus } }));
   };
 
   const openNewTaskModal = (status: TaskStatus) => {
@@ -106,7 +149,7 @@ export const BoardView: React.FC = () => {
     assigneeId?: string;
     dueDate?: string;
   }) => {
-    if (!teamId || !currentUser) return;
+    if (!projectId || !currentUser) return;
 
     const taskData = {
       title: payload.title,
@@ -120,29 +163,30 @@ export const BoardView: React.FC = () => {
 
     if (editingTask) {
       await dispatch(
-        updateTask({
-          taskId: editingTask.id,
-          updates: taskData,
-        })
+        updateTask({ taskId: editingTask.id, updates: taskData })
       );
     } else {
       await dispatch(
         createTask({
           ...taskData,
           status: newTaskStatus,
-          teamId,
+          projectId,
           creatorId: currentUser.id,
         })
       );
     }
     setIsTaskModalOpen(false);
     setEditingTask(null);
+    loadTasks();
   };
 
   const handleDeleteTask = async () => {
-    if (editingTask && editingTask.teamId) {
+    if (editingTask?.projectId) {
       await dispatch(
-        deleteTask({ taskId: editingTask.id, teamId: editingTask.teamId })
+        deleteTask({
+          taskId: editingTask.id,
+          projectId: editingTask.projectId,
+        })
       );
       setIsDeleteConfirmOpen(false);
       setIsTaskModalOpen(false);
@@ -150,57 +194,84 @@ export const BoardView: React.FC = () => {
     }
   };
 
-  const handleDeleteTeam = async () => {
-    if (activeTeamId) {
-      await dispatch(deleteTeam(activeTeamId));
-      setIsTeamSettingsOpen(false);
+  const handleDeleteProject = async () => {
+    if (activeProjectId) {
+      await dispatch(deleteProject(activeProjectId));
+      setIsProjectSettingsOpen(false);
       navigate("/dashboard");
     }
   };
 
   const handleAddMember = async (userId: string) => {
-    if (activeTeamId && userId) {
-      await dispatch(addTeamMember({ teamId:activeTeamId, userId }));
+    if (activeProjectId && userId) {
+      await dispatch(addProjectMember({ projectId: activeProjectId, userId }));
     }
   };
 
   const handleRemoveMember = async (userId: string) => {
-    if (activeTeamId) {
-      await dispatch(removeTeamMember({ teamId:activeTeamId, userId }));
+    if (activeProjectId) {
+      await dispatch(
+        removeProjectMember({ projectId: activeProjectId, userId })
+      );
     }
   };
 
-  const canDelete =
+  const canManage =
+    currentUser?.role === UserRole.ADMIN ||
+    currentUser?.role === UserRole.PROJECT_MANAGER;
+
+  const canDeleteTask =
     editingTask &&
     currentUser &&
     (editingTask.creatorId === currentUser.id ||
-      currentTeam?.ownerId === currentUser.id);
-  const isOwner = currentUser && currentTeam?.ownerId === currentUser.id;
+      canManage ||
+      currentUser.role === UserRole.ADMIN);
 
-  const teamMembers: User[] =
-    currentTeam?.members
+  const projectMembers: User[] =
+    currentProject?.members
       .filter((m) => typeof m.user === "object")
       .map((m) => m.user as User) || [];
 
   const availableUsers = users.filter(
     (u) =>
-      !currentTeam?.members.some(
+      !currentProject?.members.some(
         (m) => (typeof m.user === "object" ? m.user.id : m.user) === u.id
       )
   );
 
-  if (!activeTeamId && !currentTeam) {
+  if (!activeProjectId && !currentProject) {
     return <Navigate to="/dashboard" replace />;
   }
 
   return (
     <div id="board-view-component--ts" className="flex flex-col h-full w-full">
       <BoardHeader
-        team={currentTeam as Team | undefined}
-        isOwner={!!isOwner}
+        project={currentProject as Project | undefined}
+        canManage={!!canManage}
         onOpenSidebar={() => setSidebarOpen(true)}
-        onOpenTeamSettings={() => setIsTeamSettingsOpen(true)}
+        onOpenProjectSettings={() => setIsProjectSettingsOpen(true)}
       />
+
+      <div className="px-4 sm:px-6 py-3 bg-white border-b border-gray-100 flex flex-wrap gap-3 items-center">
+        <SearchBar value={search} onChange={setSearch} />
+        <TaskFilters
+          status={filterStatus}
+          priority={filterPriority}
+          assignee={filterAssignee}
+          deadlineStatus={filterDeadline}
+          members={projectMembers.map((m) => ({ id: m.id, name: m.name }))}
+          onStatusChange={setFilterStatus}
+          onPriorityChange={setFilterPriority}
+          onAssigneeChange={setFilterAssignee}
+          onDeadlineStatusChange={setFilterDeadline}
+        />
+        <SortControls
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortByChange={setSortBy}
+          onSortOrderChange={setSortOrder}
+        />
+      </div>
 
       <div
         id="board-view-body--ts"
@@ -213,7 +284,7 @@ export const BoardView: React.FC = () => {
               title={status.replace("_", " ")}
               status={status}
               tasks={tasks.filter((t) => t.status === status)}
-              users={teamMembers}
+              users={projectMembers}
               onDropTask={handleDropTask}
               onAddTask={openNewTaskModal}
               onEditTask={openEditTaskModal}
@@ -221,6 +292,12 @@ export const BoardView: React.FC = () => {
           ))}
         </div>
       </div>
+
+      <Pagination
+        page={taskPage}
+        totalPages={taskTotalPages}
+        onPageChange={setPage}
+      />
 
       <TaskFormModal
         isOpen={isTaskModalOpen}
@@ -230,8 +307,8 @@ export const BoardView: React.FC = () => {
         }}
         onSubmit={handleCreateOrUpdateTask}
         task={editingTask}
-        canDelete={!!canDelete}
-        users={teamMembers}
+        canDelete={!!canDeleteTask}
+        users={projectMembers}
         onRequestDelete={() => setIsDeleteConfirmOpen(true)}
       />
 
@@ -242,16 +319,16 @@ export const BoardView: React.FC = () => {
         onConfirm={handleDeleteTask}
       />
 
-      <TeamSettingsModal
-        isOpen={isTeamSettingsOpen}
-        onClose={() => setIsTeamSettingsOpen(false)}
-        team={currentTeam || null}
+      <ProjectSettingsModal
+        isOpen={isProjectSettingsOpen}
+        onClose={() => setIsProjectSettingsOpen(false)}
+        project={currentProject || null}
         currentUser={currentUser}
-        isOwner={!!isOwner}
+        canManage={!!canManage}
         availableUsers={availableUsers}
         onAddMember={handleAddMember}
         onRemoveMember={handleRemoveMember}
-        onDeleteTeam={handleDeleteTeam}
+        onDeleteProject={handleDeleteProject}
       />
     </div>
   );
