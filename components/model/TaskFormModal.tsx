@@ -38,6 +38,7 @@ export const TaskFormModal: React.FC<Props> = ({
   const [commentText, setCommentText] = useState("");
 
   useEffect(() => {
+    if (!isOpen) return;
     if (task) {
       setTitle(task.title);
       setDescription(task.description);
@@ -54,7 +55,7 @@ export const TaskFormModal: React.FC<Props> = ({
       setComments([]);
     }
     setCommentText("");
-  }, [task]);
+  }, [task, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

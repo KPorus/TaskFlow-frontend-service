@@ -6,52 +6,30 @@ import {
   mapTask,
   mapUser,
 } from "@/helpers/maper";
+import {
+  clearStoredSession,
+  parseAuthResponse,
+} from "@/helpers/authSession";
 import { Task, TaskListFilters } from "../types";
-import { KEYS, request } from "@/helpers/request";
+import { request } from "@/helpers/request";
 
 export const ApiService = {
   auth: {
     login: async (email: string, password?: string) => {
+      clearStoredSession();
       const result = await request("/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-
-      const token =
-        localStorage.getItem(KEYS.TOKEN) || result.data?.accessToken;
-      if (token) localStorage.setItem(KEYS.TOKEN, token);
-
-      const userData = result.data?.user || result.data;
-      const user = {
-        id: userData.id || userData._id,
-        email: userData.email,
-        name: userData.name || userData.email.split("@")[0],
-        role: userData.role,
-      };
-
-      localStorage.setItem(KEYS.USER_DATA, JSON.stringify(user));
-      return { user, token };
+      return parseAuthResponse(result);
     },
     register: async (name: string, email: string, password?: string) => {
+      clearStoredSession();
       const result = await request("/auth/register", {
         method: "POST",
         body: JSON.stringify({ name, email, password }),
       });
-
-      const token =
-        localStorage.getItem(KEYS.TOKEN) || result.data?.accessToken;
-      if (token) localStorage.setItem(KEYS.TOKEN, token);
-
-      const userData = result.data?.user || result.data;
-      const user = {
-        id: userData.id || userData._id,
-        email: userData.email,
-        name: name,
-        role: userData.role,
-      };
-
-      localStorage.setItem(KEYS.USER_DATA, JSON.stringify(user));
-      return { user, token };
+      return parseAuthResponse(result, name);
     },
   },
   projects: {
@@ -176,7 +154,7 @@ export const ApiService = {
   },
   users: {
     list: async () => {
-      const result = await request("/auth/get-all-users");
+      const result = await request("/auth/users-for-invite");
       const users = Array.isArray(result.data?.users)
         ? result.data.users
         : Array.isArray(result.data)

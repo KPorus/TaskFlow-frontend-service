@@ -23,9 +23,12 @@ import {
   Task,
   User,
   Project,
-  UserRole,
   TaskListFilters,
 } from "../../types";
+import {
+  canManageProject,
+  hasProjectAccess,
+} from "@/helpers/projectPermissions";
 import { BoardColumn } from "./BoardColumn";
 import { BoardHeader } from "./BoardHeader";
 import { TaskFormModal } from "../model/TaskFormModal";
@@ -53,12 +56,15 @@ export const BoardView: React.FC = () => {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
   const projectData = projects.find((p) => p.id === projectId);
+  const hasAccess =
+    !!projectId &&
+    !!projectData &&
+    hasProjectAccess(projectId, projects);
 
   const activeProjectId = React.useMemo(() => {
-    if (projectData?.id) return projectData.id;
-    if (projects.length > 0) return projects[0].id;
+    if (hasAccess && projectData?.id) return projectData.id;
     return null;
-  }, [projectData, projects]);
+  }, [hasAccess, projectData]);
 
   const currentProject = React.useMemo(() => {
     if (!activeProjectId) return null;
@@ -70,6 +76,7 @@ export const BoardView: React.FC = () => {
   const [isProjectSettingsOpen, setIsProjectSettingsOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [newTaskStatus, setNewTaskStatus] = useState<TaskStatus>(TaskStatus.TODO);
+  const [taskFormKey, setTaskFormKey] = useState(0);
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -134,6 +141,7 @@ export const BoardView: React.FC = () => {
   const openNewTaskModal = (status: TaskStatus) => {
     setEditingTask(null);
     setNewTaskStatus(status);
+    setTaskFormKey((k) => k + 1);
     setIsTaskModalOpen(true);
   };
 
@@ -216,16 +224,12 @@ export const BoardView: React.FC = () => {
     }
   };
 
-  const canManage =
-    currentUser?.role === UserRole.ADMIN ||
-    currentUser?.role === UserRole.PROJECT_MANAGER;
+  const canManage = canManageProject(currentProject, currentUser);
 
   const canDeleteTask =
     editingTask &&
     currentUser &&
-    (editingTask.creatorId === currentUser.id ||
-      canManage ||
-      currentUser.role === UserRole.ADMIN);
+    (editingTask.creatorId === currentUser.id || canManage);
 
   const projectMembers: User[] =
     currentProject?.members
@@ -238,6 +242,10 @@ export const BoardView: React.FC = () => {
         (m) => (typeof m.user === "object" ? m.user.id : m.user) === u.id
       )
   );
+
+  if (projectId && !hasAccess) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   if (!activeProjectId && !currentProject) {
     return <Navigate to="/dashboard" replace />;
@@ -300,6 +308,7 @@ export const BoardView: React.FC = () => {
       />
 
       <TaskFormModal
+        key={editingTask?.id ?? `new-${taskFormKey}`}
         isOpen={isTaskModalOpen}
         onClose={() => {
           setIsTaskModalOpen(false);

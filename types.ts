@@ -1,8 +1,9 @@
 export enum UserRole {
   ADMIN = "ADMIN",
-  PROJECT_MANAGER = "PROJECT_MANAGER",
-  TEAM_MEMBER = "TEAM_MEMBER",
+  USER = "USER",
 }
+
+export type ProjectRoleOnProject = "OWNER" | "MEMBER" | "ADMIN";
 
 export enum ProjectStatus {
   ACTIVE = "ACTIVE",
@@ -42,6 +43,7 @@ export interface Project {
   status: ProjectStatus;
   ownerId: string;
   members: ProjectMember[];
+  roleOnProject?: ProjectRoleOnProject;
 }
 
 export interface Task {
@@ -89,6 +91,7 @@ export interface DashboardStats {
   completedTasks: number;
   pendingTasks: number;
   overdueTasks: number;
+  isSystemWide?: boolean;
 }
 
 export interface ProjectSummary {
@@ -98,6 +101,8 @@ export interface ProjectSummary {
   pendingTasks: number;
   completionPercent: number;
   deadlineLabel: string;
+  roleOnProject?: ProjectRoleOnProject;
+  isOwner?: boolean;
 }
 
 export interface WorkloadItem {

@@ -41,7 +41,9 @@ const initialState: DashboardState = {
 const dashboardSlice = createSlice({
   name: "dashboard",
   initialState,
-  reducers: {},
+  reducers: {
+    resetDashboard: () => initialState,
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchDashboard.pending, (state) => {
@@ -63,4 +65,5 @@ const dashboardSlice = createSlice({
   },
 });
 
+export const { resetDashboard } = dashboardSlice.actions;
 export default dashboardSlice.reducer;

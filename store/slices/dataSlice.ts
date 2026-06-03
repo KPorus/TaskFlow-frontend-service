@@ -42,6 +42,7 @@ const dataSlice = createSlice({
   initialState,
   reducers: {
     setActiveProject,
+    resetAppData: () => initialState,
     ...socketReducers,
   },
   extraReducers: (builder) => {
@@ -96,6 +97,7 @@ const dataSlice = createSlice({
 
 export const {
   setActiveProject: setActiveProjectAction,
+  resetAppData,
   socketTaskCreated,
   socketTaskUpdated,
   socketTaskDeleted,

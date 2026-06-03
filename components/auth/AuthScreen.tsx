@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { AppDispatch, RootState } from "../../store/store";
-import { Layout, ArrowRight, Lock, Mail, User, Zap } from "lucide-react";
+import { Layout, ArrowRight, Lock, Mail, User, Shield } from "lucide-react";
 import { loginUser, registerUser } from "@/store/slices/helper/authThunks";
 
 export const AuthScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const { loading, error } = useSelector((state: RootState) => state.auth);
   const [isLogin, setIsLogin] = useState(true);
 
@@ -15,19 +17,22 @@ export const AuthScreen: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLogin) {
-      await dispatch(loginUser({ email, password }));
-    } else {
-      await dispatch(registerUser({ name, email, password }));
+    const action = isLogin
+      ? loginUser({ email, password })
+      : registerUser({ name, email, password });
+    const result = await dispatch(action);
+    if (loginUser.fulfilled.match(result) || registerUser.fulfilled.match(result)) {
+      navigate("/dashboard", { replace: true });
     }
   };
 
   const handleDemoLogin = async () => {
-    setEmail("pm@taskflow.com");
-    setPassword("Pm@123");
-    await dispatch(
-      loginUser({ email: "pm@taskflow.com", password: "Pm@123" })
+    const result = await dispatch(
+      loginUser({ email: "admin@taskflow.com", password: "Admin@123" }),
     );
+    if (loginUser.fulfilled.match(result)) {
+      navigate("/dashboard", { replace: true });
+    }
   };
 
   return (
@@ -65,8 +70,8 @@ export const AuthScreen: React.FC = () => {
             disabled={loading}
             className="w-full mb-6 flex items-center justify-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold py-2.5 rounded-xl border border-amber-200 transition-colors"
           >
-            <Zap size={18} />
-            Demo Login (PM)
+            <Shield size={18} />
+            Demo Login (Admin)
           </button>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -105,7 +110,7 @@ export const AuthScreen: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-11 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder="pm@taskflow.com"
+                  placeholder="you@example.com"
                 />
               </div>
             </div>

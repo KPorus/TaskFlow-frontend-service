@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { RootState, AppDispatch } from "../../store/store";
-import { logout } from "../../store/slices/authSlice";
+import { logoutUser } from "@/store/slices/helper/authThunks";
 import { Layout, LogOut, Plus, Hash, X } from "lucide-react";
 import { Modal } from "../ui/Modal";
 import { createProject, fetchProjects } from "@/store/slices/helper/dataThunks";
-import { UserRole } from "@/types";
+import { canCreateProject, isAdmin } from "@/helpers/projectPermissions";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -24,9 +24,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
 
-  const canCreateProject =
-    user?.role === UserRole.ADMIN ||
-    user?.role === UserRole.PROJECT_MANAGER;
+  const showCreateProject = canCreateProject(user);
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,8 +47,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
+  const handleLogout = async () => {
+    await dispatch(logoutUser());
     navigate("/login");
   };
 
@@ -95,7 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               </button>
             ))}
 
-            {canCreateProject && (
+            {showCreateProject && (
               <button
                 onClick={() => setIsProjectModalOpen(true)}
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-indigo-400 transition-colors border-t border-slate-800 mt-2 pt-3"
@@ -116,7 +114,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <p className="text-sm font-medium text-white truncate">
                 {user?.name}
               </p>
-              <p className="text-xs text-slate-400 truncate">{user?.email}</p>
+              <p className="text-xs text-slate-400 truncate">
+                {user?.email}
+                {isAdmin(user) && (
+                  <span className="ml-1 text-amber-400">· Admin</span>
+                )}
+              </p>
             </div>
           </div>
           <button

@@ -1,10 +1,18 @@
-import { Project, Task, User, Comment, Activity, Notification } from "@/types";
+import {
+  Project,
+  ProjectRoleOnProject,
+  Task,
+  User,
+  Comment,
+  Activity,
+  Notification,
+} from "@/types";
 import { getId } from "./getId";
 
 export const mapProject = (t: any): Project => {
   if (!t) return null as any;
   return {
-    id: t._id,
+    id: t._id || t.id,
     name: t.name,
     description: t.description,
     deadline: t.deadline,
@@ -14,20 +22,21 @@ export const mapProject = (t: any): Project => {
       user:
         typeof m.user === "object" && m.user !== null
           ? {
-              id: m.user._id,
+              id: m.user._id || m.user.id,
               name: m.user.name,
               email: m.user.email,
               role: m.user.role,
             }
           : m.user,
     })),
+    roleOnProject: t.roleOnProject as ProjectRoleOnProject | undefined,
   };
 };
 
 export const mapTask = (t: any): Task => {
   if (!t) return null as any;
   return {
-    id: t._id,
+    id: t._id || t.id,
     title: t.title,
     description: t.description,
     status: t.status,
@@ -42,7 +51,7 @@ export const mapTask = (t: any): Task => {
 
 export const mapUser = (u: any): User => {
   return {
-    id: u._id,
+    id: u._id || u.id,
     name: u.name,
     email: u.email,
     role: u.role,
@@ -50,7 +59,7 @@ export const mapUser = (u: any): User => {
 };
 
 export const mapComment = (c: any): Comment => ({
-  id: c._id,
+  id: c._id || c.id,
   taskId: getId(c.task),
   authorId: getId(c.author),
   authorName: c.author?.name,
@@ -59,7 +68,7 @@ export const mapComment = (c: any): Comment => ({
 });
 
 export const mapActivity = (a: any): Activity => ({
-  id: a._id,
+  id: a._id || a.id,
   type: a.type,
   message: a.message,
   createdAt: a.createdAt,
@@ -67,7 +76,7 @@ export const mapActivity = (a: any): Activity => ({
 });
 
 export const mapNotification = (n: any): Notification => ({
-  id: n._id,
+  id: n._id || n.id,
   type: n.type,
   message: n.message,
   link: n.link,

@@ -12,12 +12,15 @@ import { UpcomingDeadlines } from "./UpcomingDeadlines";
 import { HighPriorityTasks } from "./HighPriorityTasks";
 import { TaskCharts } from "./TaskCharts";
 import { Layout } from "lucide-react";
+import { isAdmin } from "@/helpers/projectPermissions";
 
 export const DashboardHome: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { projects } = useSelector((state: RootState) => state.data);
+  const { user } = useSelector((state: RootState) => state.auth);
   const dashboard = useSelector((state: RootState) => state.dashboard);
+  const adminView = isAdmin(user);
 
   useEffect(() => {
     dispatch(fetchDashboard());
@@ -35,9 +38,13 @@ export const DashboardHome: React.FC = () => {
           <Layout size={24} />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {adminView ? "System Dashboard" : "Dashboard"}
+          </h1>
           <p className="text-sm text-gray-500">
-            Project progress and team productivity
+            {adminView
+              ? "Overview of all projects in the system"
+              : "Your projects and teams you belong to"}
           </p>
         </div>
       </div>

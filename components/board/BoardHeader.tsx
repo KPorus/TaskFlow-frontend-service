@@ -1,6 +1,6 @@
 import React from "react";
 import { Menu, Settings } from "lucide-react";
-import { Project, User, UserRole } from "../../types";
+import { Project, User } from "../../types";
 import { TeamMembersAvatarGroup } from "./TeamMembersAvatarGroup";
 
 interface Props {

@@ -35,7 +35,8 @@ export async function request(
   if (
     response.status === 401 &&
     !isRetry &&
-    !endpoint.includes("/auth/login")
+    !endpoint.includes("/auth/login") &&
+    !endpoint.includes("/auth/register")
   ) {
     try {
       const refreshResponse = await fetch(`${BASE_URL}/auth/refreshToken`, {
