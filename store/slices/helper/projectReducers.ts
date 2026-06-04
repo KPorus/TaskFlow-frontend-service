@@ -31,3 +31,16 @@ export const applyDeleteProject = (
       state.projects.length > 0 ? state.projects[0].id : null;
   }
 };
+
+export const applyRevokeProjectAccess = (
+  state: DataState,
+  action: PayloadAction<string>
+) => {
+  const projectId = action.payload;
+  state.projects = state.projects.filter((p) => p.id !== projectId);
+  state.tasks = state.tasks.filter((t) => t.projectId !== projectId);
+  if (state.activeProjectId === projectId) {
+    state.activeProjectId =
+      state.projects.length > 0 ? state.projects[0].id : null;
+  }
+};

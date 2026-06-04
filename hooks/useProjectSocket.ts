@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import {
   socketTaskCreated,
   socketTaskUpdated,
@@ -7,20 +7,12 @@ import {
   socketProjectUpdated,
   socketProjectDelete,
 } from "../store/slices/dataSlice";
-import { pushSocketNotification } from "../store/slices/notificationSlice";
 import { socket, SOCKET_EVENTS } from "../services/socket";
-import type { AppDispatch, RootState } from "../store/store";
+import type { AppDispatch } from "../store/store";
 import { mapTask, mapProject } from "@/helpers/maper";
 
 export const useProjectSocket = (activeProjectId?: string) => {
   const dispatch = useDispatch<AppDispatch>();
-  const userId = useSelector((state: RootState) => state.auth.user?.id);
-
-  useEffect(() => {
-    if (userId) {
-      socket.emit(SOCKET_EVENTS.JOIN_USER, userId);
-    }
-  }, [userId]);
 
   useEffect(() => {
     if (!activeProjectId) return;
@@ -60,8 +52,6 @@ export const useProjectSocket = (activeProjectId?: string) => {
     socket.on(SOCKET_EVENTS.PROJECT_MEMBER_ADDED, handleProjectUpdated);
     socket.on(SOCKET_EVENTS.PROJECT_MEMBER_REMOVED, handleProjectUpdated);
     socket.on(SOCKET_EVENTS.PROJECT_UPDATED, handleProjectUpdated);
-    socket.on(SOCKET_EVENTS.NOTIFICATION, handleNotification);
-
     return () => {
       socket.off(SOCKET_EVENTS.TASK_CREATED, handleTaskCreated);
       socket.off(SOCKET_EVENTS.TASK_UPDATED, handleTaskUpdated);
@@ -71,7 +61,6 @@ export const useProjectSocket = (activeProjectId?: string) => {
       socket.off(SOCKET_EVENTS.PROJECT_MEMBER_ADDED, handleProjectUpdated);
       socket.off(SOCKET_EVENTS.PROJECT_MEMBER_REMOVED, handleProjectUpdated);
       socket.off(SOCKET_EVENTS.PROJECT_UPDATED, handleProjectUpdated);
-      socket.off(SOCKET_EVENTS.NOTIFICATION, handleNotification);
     };
   }, [activeProjectId, dispatch]);
 };

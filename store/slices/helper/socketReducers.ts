@@ -8,6 +8,7 @@ import {
 import {
   applyProjectUpdated,
   applyDeleteProject,
+  applyRevokeProjectAccess,
 } from "./projectReducers";
 
 export const socketReducers = {
@@ -19,6 +20,10 @@ export const socketReducers = {
     action: PayloadAction<Project>
   ) => void,
   socketProjectDelete: applyDeleteProject as (
+    state: DataState,
+    action: PayloadAction<string>
+  ) => void,
+  revokeProjectAccess: applyRevokeProjectAccess as (
     state: DataState,
     action: PayloadAction<string>
   ) => void,

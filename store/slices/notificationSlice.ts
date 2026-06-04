@@ -3,7 +3,15 @@ import { Notification, NotificationState } from "../../types";
 import { ApiService } from "@/services/apiService";
 import { mapNotification } from "@/helpers/maper";
 import { fetchProjects } from "./helper/dataThunks";
+import { fetchDashboard } from "./dashboardSlice";
+import { revokeProjectAccess } from "./dataSlice";
 import type { AppDispatch } from "../store";
+
+const projectIdFromLink = (link?: string): string | null => {
+  if (!link) return null;
+  const match = link.match(/\/projects\/([^/]+)/);
+  return match?.[1] ?? null;
+};
 
 export const fetchNotifications = createAsyncThunk(
   "notifications/fetch",
@@ -56,8 +64,16 @@ export const pushSocketNotification =
   (raw: unknown) => (dispatch: AppDispatch) => {
     const notification = mapNotification(raw);
     dispatch(addNotification(notification));
-    if (notification.type === "MEMBER_ADDED") {
+    if (
+      notification.type === "MEMBER_ADDED" ||
+      notification.type === "MEMBER_REMOVED"
+    ) {
+      if (notification.type === "MEMBER_REMOVED") {
+        const projectId = projectIdFromLink(notification.link);
+        if (projectId) dispatch(revokeProjectAccess(projectId));
+      }
       dispatch(fetchProjects());
+      dispatch(fetchDashboard());
     }
   };
 

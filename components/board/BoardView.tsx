@@ -41,15 +41,13 @@ import { TaskFilters } from "../search/TaskFilters";
 import { SortControls } from "../search/SortControls";
 import { Pagination } from "../search/Pagination";
 
-interface DashboardContext {
-  setSidebarOpen: (isOpen: boolean) => void;
-}
+import type { DashboardLayoutContext } from "@/screen/DashboardLayout";
 
 export const BoardView: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
-  const { setSidebarOpen } = useOutletContext<DashboardContext>();
+  const { setSidebarOpen } = useOutletContext<DashboardLayoutContext>();
 
   const { tasks, users, projects, taskPage, taskTotalPages } = useSelector(
     (state: RootState) => state.data

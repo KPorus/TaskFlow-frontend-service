@@ -103,6 +103,7 @@ export const {
   socketTaskDeleted,
   socketProjectUpdated,
   socketProjectDelete,
+  revokeProjectAccess,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

@@ -28,4 +28,5 @@ export const SOCKET_EVENTS = {
   PROJECT_UPDATED: "projectUpdated",
   COMMENT_ADDED: "commentAdded",
   NOTIFICATION: "notification",
+  MEMBERSHIP_CHANGED: "membershipChanged",
 };
