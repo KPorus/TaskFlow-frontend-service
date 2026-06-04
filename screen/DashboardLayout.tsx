@@ -7,6 +7,7 @@ import { NotificationBell } from "../components/layout/NotificationBell";
 import { useProjectSocket } from "@/hooks/useProjectSocket";
 import { fetchProjects } from "@/store/slices/helper/dataThunks";
 import { fetchNotifications } from "@/store/slices/notificationSlice";
+import { socket, SOCKET_EVENTS } from "@/services/socket";
 
 export const DashboardLayout: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -20,6 +21,12 @@ export const DashboardLayout: React.FC = () => {
       dispatch(fetchNotifications());
     }
   }, [user, dispatch]);
+
+  useEffect(() => {
+    if (user?.id) {
+      socket.emit(SOCKET_EVENTS.JOIN_USER, user.id);
+    }
+  }, [user?.id]);
 
   useProjectSocket(activeProjectId ?? undefined);
 

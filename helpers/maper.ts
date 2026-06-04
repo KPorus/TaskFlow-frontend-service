@@ -76,10 +76,10 @@ export const mapActivity = (a: any): Activity => ({
 });
 
 export const mapNotification = (n: any): Notification => ({
-  id: n._id || n.id,
+  id: String(n._id || n.id),
   type: n.type,
   message: n.message,
   link: n.link,
-  read: n.read,
-  createdAt: n.createdAt,
+  read: Boolean(n.read),
+  createdAt: n.createdAt || new Date().toISOString(),
 });

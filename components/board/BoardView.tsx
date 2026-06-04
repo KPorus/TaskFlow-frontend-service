@@ -16,6 +16,7 @@ import {
   fetchAllUsers,
   addProjectMember,
   removeProjectMember,
+  fetchProjects,
 } from "../../store/slices/helper/dataThunks";
 import {
   TaskStatus,
@@ -212,7 +213,12 @@ export const BoardView: React.FC = () => {
 
   const handleAddMember = async (userId: string) => {
     if (activeProjectId && userId) {
-      await dispatch(addProjectMember({ projectId: activeProjectId, userId }));
+      const result = await dispatch(
+        addProjectMember({ projectId: activeProjectId, userId })
+      );
+      if (addProjectMember.fulfilled.match(result)) {
+        await dispatch(fetchProjects());
+      }
     }
   };
 

@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Notification, NotificationState } from "../../types";
 import { ApiService } from "@/services/apiService";
 import { mapNotification } from "@/helpers/maper";
+import { fetchProjects } from "./helper/dataThunks";
 import type { AppDispatch } from "../store";
 
 export const fetchNotifications = createAsyncThunk(
@@ -53,7 +54,11 @@ export const { addNotification } = notificationSlice.actions;
 
 export const pushSocketNotification =
   (raw: unknown) => (dispatch: AppDispatch) => {
-    dispatch(addNotification(mapNotification(raw)));
+    const notification = mapNotification(raw);
+    dispatch(addNotification(notification));
+    if (notification.type === "MEMBER_ADDED") {
+      dispatch(fetchProjects());
+    }
   };
 
 export default notificationSlice.reducer;

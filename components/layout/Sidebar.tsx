@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { RootState, AppDispatch } from "../../store/store";
 import { logoutUser } from "@/store/slices/helper/authThunks";
-import { Layout, LogOut, Plus, Hash, X } from "lucide-react";
+import { Layout, LogOut, Plus, Hash, X, LayoutDashboard } from "lucide-react";
 import { Modal } from "../ui/Modal";
 import { createProject, fetchProjects } from "@/store/slices/helper/dataThunks";
 import { canCreateProject, isAdmin } from "@/helpers/projectPermissions";
@@ -16,7 +16,11 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { projectId: activeProjectId } = useParams<{ projectId: string }>();
+  const isDashboardHome =
+    location.pathname === "/dashboard" ||
+    location.pathname === "/dashboard/";
 
   const { projects } = useSelector((state: RootState) => state.data);
   const { user } = useSelector((state: RootState) => state.auth);
@@ -74,6 +78,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </div>
 
         <div className="flex-1 overflow-y-auto py-4">
+          <div className="space-y-1 px-2 mb-4">
+            <button
+              onClick={() => {
+                navigate("/dashboard");
+                onClose();
+              }}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isDashboardHome && !activeProjectId
+                  ? "bg-indigo-600 text-white"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              }`}
+            >
+              <LayoutDashboard size={16} className="opacity-70" />
+              <span>Dashboard</span>
+            </button>
+          </div>
           <div className="px-4 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
             Projects
           </div>
