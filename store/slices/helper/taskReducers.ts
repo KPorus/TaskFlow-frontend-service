@@ -28,3 +28,20 @@ export const applyTaskDeleted = (
 ) => {
   state.tasks = state.tasks.filter((t) => t.id !== action.payload);
 };
+
+export type ClearMemberTaskAssigneesPayload = {
+  projectId: string;
+  memberId: string;
+};
+
+export const applyClearMemberTaskAssignees = (
+  state: DataState,
+  action: PayloadAction<ClearMemberTaskAssigneesPayload>
+) => {
+  const { projectId, memberId } = action.payload;
+  state.tasks.forEach((task) => {
+    if (task.projectId === projectId && task.assigneeId === memberId) {
+      task.assigneeId = undefined;
+    }
+  });
+};

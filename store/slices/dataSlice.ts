@@ -23,6 +23,7 @@ import {
   applySocketTaskCreated,
   applyTaskDeleted,
   applyTaskUpdated,
+  applyClearMemberTaskAssignees,
 } from "./helper/taskReducers";
 
 const initialState: DataState = {
@@ -68,6 +69,13 @@ const dataSlice = createSlice({
       })
       .addCase(removeProjectMember.fulfilled, (state, action) => {
         applyProjectUpdated(state, action);
+        applyClearMemberTaskAssignees(state, {
+          type: "data/clearMemberTaskAssignees",
+          payload: {
+            projectId: action.meta.arg.projectId,
+            memberId: action.meta.arg.userId,
+          },
+        });
       })
       .addCase(fetchTasks.fulfilled, (state, action) => {
         state.tasks = action.payload.tasks;
@@ -104,6 +112,7 @@ export const {
   socketProjectUpdated,
   socketProjectDelete,
   revokeProjectAccess,
+  clearMemberTaskAssignees,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

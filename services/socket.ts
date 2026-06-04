@@ -29,4 +29,5 @@ export const SOCKET_EVENTS = {
   COMMENT_ADDED: "commentAdded",
   NOTIFICATION: "notification",
   MEMBERSHIP_CHANGED: "membershipChanged",
+  MEMBER_ASSIGNEES_CLEARED: "memberAssigneesCleared",
 };

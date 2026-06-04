@@ -1,11 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  useParams,
-  useOutletContext,
-  useNavigate,
-  Navigate,
-} from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { RootState, AppDispatch } from "../../store/store";
 import {
   updateTask,
@@ -41,13 +36,10 @@ import { TaskFilters } from "../search/TaskFilters";
 import { SortControls } from "../search/SortControls";
 import { Pagination } from "../search/Pagination";
 
-import type { DashboardLayoutContext } from "@/screen/DashboardLayout";
-
 export const BoardView: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
-  const { setSidebarOpen } = useOutletContext<DashboardLayoutContext>();
 
   const { tasks, users, projects, taskPage, taskTotalPages } = useSelector(
     (state: RootState) => state.data
@@ -216,15 +208,19 @@ export const BoardView: React.FC = () => {
       );
       if (addProjectMember.fulfilled.match(result)) {
         await dispatch(fetchProjects());
+        loadTasks();
       }
     }
   };
 
   const handleRemoveMember = async (userId: string) => {
     if (activeProjectId) {
-      await dispatch(
+      const result = await dispatch(
         removeProjectMember({ projectId: activeProjectId, userId })
       );
+      if (removeProjectMember.fulfilled.match(result)) {
+        loadTasks();
+      }
     }
   };
 
@@ -260,7 +256,6 @@ export const BoardView: React.FC = () => {
       <BoardHeader
         project={currentProject as Project | undefined}
         canManage={!!canManage}
-        onOpenSidebar={() => setSidebarOpen(true)}
         onOpenProjectSettings={() => setIsProjectSettingsOpen(true)}
       />
 

@@ -6,6 +6,7 @@ import {
   socketTaskDeleted,
   socketProjectUpdated,
   socketProjectDelete,
+  clearMemberTaskAssignees,
 } from "../store/slices/dataSlice";
 import { socket, SOCKET_EVENTS } from "../services/socket";
 import type { AppDispatch } from "../store/store";
@@ -40,8 +41,18 @@ export const useProjectSocket = (activeProjectId?: string) => {
       if (data?.projectId) dispatch(socketProjectDelete(data.projectId));
     };
 
-    const handleNotification = (raw: unknown) => {
-      dispatch(pushSocketNotification(raw));
+    const handleMemberAssigneesCleared = (data: {
+      projectId?: string;
+      memberId?: string;
+    }) => {
+      if (data?.projectId && data?.memberId) {
+        dispatch(
+          clearMemberTaskAssignees({
+            projectId: data.projectId,
+            memberId: data.memberId,
+          })
+        );
+      }
     };
 
     socket.on(SOCKET_EVENTS.TASK_CREATED, handleTaskCreated);
@@ -52,6 +63,11 @@ export const useProjectSocket = (activeProjectId?: string) => {
     socket.on(SOCKET_EVENTS.PROJECT_MEMBER_ADDED, handleProjectUpdated);
     socket.on(SOCKET_EVENTS.PROJECT_MEMBER_REMOVED, handleProjectUpdated);
     socket.on(SOCKET_EVENTS.PROJECT_UPDATED, handleProjectUpdated);
+    socket.on(
+      SOCKET_EVENTS.MEMBER_ASSIGNEES_CLEARED,
+      handleMemberAssigneesCleared
+    );
+
     return () => {
       socket.off(SOCKET_EVENTS.TASK_CREATED, handleTaskCreated);
       socket.off(SOCKET_EVENTS.TASK_UPDATED, handleTaskUpdated);
@@ -61,6 +77,10 @@ export const useProjectSocket = (activeProjectId?: string) => {
       socket.off(SOCKET_EVENTS.PROJECT_MEMBER_ADDED, handleProjectUpdated);
       socket.off(SOCKET_EVENTS.PROJECT_MEMBER_REMOVED, handleProjectUpdated);
       socket.off(SOCKET_EVENTS.PROJECT_UPDATED, handleProjectUpdated);
+      socket.off(
+        SOCKET_EVENTS.MEMBER_ASSIGNEES_CLEARED,
+        handleMemberAssigneesCleared
+      );
     };
   }, [activeProjectId, dispatch]);
 };

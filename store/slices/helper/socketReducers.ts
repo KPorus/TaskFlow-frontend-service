@@ -4,6 +4,8 @@ import {
   applySocketTaskCreated,
   applyTaskUpdated,
   applyTaskDeleted,
+  applyClearMemberTaskAssignees,
+  ClearMemberTaskAssigneesPayload,
 } from "./taskReducers";
 import {
   applyProjectUpdated,
@@ -26,5 +28,9 @@ export const socketReducers = {
   revokeProjectAccess: applyRevokeProjectAccess as (
     state: DataState,
     action: PayloadAction<string>
+  ) => void,
+  clearMemberTaskAssignees: applyClearMemberTaskAssignees as (
+    state: DataState,
+    action: PayloadAction<ClearMemberTaskAssigneesPayload>
   ) => void,
 };
