@@ -3,7 +3,7 @@ import { io, Socket } from "socket.io-client";
 const URL =
   import.meta.env.VITE_SOCKET_URL ||
   import.meta.env.VITE_BASE_URL?.replace("/api/v1", "") ||
-  "http://localhost:5000";
+  "https://taskflow-backend-service-production.up.railway.app";
 
 export const socket: Socket = io(URL, {
   transports: ["websocket"],
