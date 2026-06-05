@@ -50,10 +50,9 @@ export const AuthScreen: React.FC = () => {
           <div className="relative z-10">
             <div
               id="Logo"
-              className="mx-auto flex items-center justify-center text-white mb-4"
+              className="mx-auto bg-white/20 w-14 h-14 rounded-xl flex items-center justify-center text-white mb-4 backdrop-blur-md border border-white/30 shadow-lg"
             >
-              {/* <Layout size={28} /> */}
-              <img src="/assets/logo-removebg-preview.png" alt="TaskFlow" className="w- h-32" />
+              <Layout size={28} />
             </div>
             <h1 className="text-3xl font-bold text-white tracking-tight">
               TaskFlow
