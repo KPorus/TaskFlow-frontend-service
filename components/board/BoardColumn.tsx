@@ -8,6 +8,8 @@ interface BoardColumnProps {
   status: TaskStatus;
   tasks: Task[];
   users: User[];
+  canCreateTask: boolean;
+  canUpdateTask: boolean;
   onDropTask: (taskId: string, newStatus: TaskStatus) => void;
   onAddTask: (status: TaskStatus) => void;
   onEditTask: (task: Task) => void;
@@ -17,7 +19,9 @@ export const BoardColumn: React.FC<BoardColumnProps> = ({
   title, 
   status, 
   tasks, 
-  users, 
+  users,
+  canCreateTask,
+  canUpdateTask,
   onDropTask,
   onAddTask,
   onEditTask
@@ -66,6 +70,7 @@ export const BoardColumn: React.FC<BoardColumnProps> = ({
             key={task.id} 
             task={task} 
             assignee={getAssignee(task.assigneeId)}
+            canUpdate={canUpdateTask}
             onDragStart={handleDragStart}
             onClick={onEditTask}
           />

@@ -1,23 +1,36 @@
-import { DataState, Task, Team } from "../../../types";
+import { DataState, Project } from "../../../types";
 import { PayloadAction } from "@reduxjs/toolkit";
 import {
   applySocketTaskCreated,
   applyTaskUpdated,
   applyTaskDeleted,
+  applyClearMemberTaskAssignees,
+  ClearMemberTaskAssigneesPayload,
 } from "./taskReducers";
-import { applyTeamUpdated, applyDeleteTeam } from "./teamReducers";
+import {
+  applyProjectUpdated,
+  applyDeleteProject,
+  applyRevokeProjectAccess,
+} from "./projectReducers";
 
 export const socketReducers = {
   socketTaskCreated: applySocketTaskCreated,
   socketTaskUpdated: applyTaskUpdated,
   socketTaskDeleted: applyTaskDeleted,
-  socketTeamUpdated: applyTeamUpdated as (
+  socketProjectUpdated: applyProjectUpdated as (
     state: DataState,
-    action: PayloadAction<Team>
+    action: PayloadAction<Project>
   ) => void,
-  socketTeamDelete: applyDeleteTeam as (
+  socketProjectDelete: applyDeleteProject as (
     state: DataState,
     action: PayloadAction<string>
   ) => void,
-  // socketTeamCreated:applyCreateTeam as (state: DataState, action: PayloadAction<Team>)=>void
+  revokeProjectAccess: applyRevokeProjectAccess as (
+    state: DataState,
+    action: PayloadAction<string>
+  ) => void,
+  clearMemberTaskAssignees: applyClearMemberTaskAssignees as (
+    state: DataState,
+    action: PayloadAction<ClearMemberTaskAssigneesPayload>
+  ) => void,
 };

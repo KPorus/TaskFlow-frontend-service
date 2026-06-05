@@ -1,101 +1,114 @@
-import { mapTask, mapTeam, mapUser } from "@/helpers/maper";
 import {
-  User,
-  Task
-} from "../types";
-import { KEYS, request } from "@/helpers/request";
-
-
+  mapActivity,
+  mapComment,
+  mapNotification,
+  mapProject,
+  mapTask,
+  mapUser,
+} from "@/helpers/maper";
+import {
+  clearStoredSession,
+  parseAuthResponse,
+} from "@/helpers/authSession";
+import { Task, TaskListFilters } from "../types";
+import { request } from "@/helpers/request";
 
 export const ApiService = {
   auth: {
     login: async (email: string, password?: string) => {
+      clearStoredSession();
       const result = await request("/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-
-      const token =
-        localStorage.getItem(KEYS.TOKEN) || result.data?.accessToken;
-      if (token) localStorage.setItem(KEYS.TOKEN, token);
-
-      const user: User = {
-        id: result.data.id,
-        email: result.data.email,
-        name: result.data.email.split("@")[0],
-      };
-
-      localStorage.setItem(KEYS.USER_DATA, JSON.stringify(user));
-      return { user, token };
+      return parseAuthResponse(result);
     },
     register: async (name: string, email: string, password?: string) => {
+      clearStoredSession();
       const result = await request("/auth/register", {
         method: "POST",
         body: JSON.stringify({ name, email, password }),
       });
-
-      const token =
-        localStorage.getItem(KEYS.TOKEN) || result.data?.accessToken;
-      if (token) localStorage.setItem(KEYS.TOKEN, token);
-
-      const user: User = {
-        id: result.data.user.id,
-        email: result.data.user.email,
-        name: name,
-      };
-
-      localStorage.setItem(KEYS.USER_DATA, JSON.stringify(user));
-      return { user, token };
+      return parseAuthResponse(result, name);
     },
   },
-  teams: {
-    list: async () => {
-      const result = await request("/team/list");
-      const teams = Array.isArray(result.data)
-        ? result.data
-        : result.data?.teams || [];
-      return Array.isArray(teams) ? teams.map(mapTeam) : [];
+  projects: {
+    list: async (params?: { status?: string; search?: string }) => {
+      const qs = new URLSearchParams();
+      if (params?.status) qs.set("status", params.status);
+      if (params?.search) qs.set("search", params.search);
+      const query = qs.toString() ? `?${qs.toString()}` : "";
+      const result = await request(`/project/list${query}`);
+      const projects = Array.isArray(result.data?.projects)
+        ? result.data.projects
+        : Array.isArray(result.data)
+          ? result.data
+          : [];
+      return projects.map(mapProject);
     },
-    create: async (name: string) => {
-      const result = await request("/team/create", {
+    create: async (data: {
+      name: string;
+      description?: string;
+      deadline?: string;
+      status?: string;
+    }) => {
+      const result = await request("/project/create", {
         method: "POST",
-        body: JSON.stringify({ name }),
+        body: JSON.stringify(data),
       });
-      return mapTeam(result.data?.team || result.data);
+      return mapProject(result.data?.project || result.data);
     },
-    addMember: async (teamId: string, userId: string) => {
-      const result = await request(`/team/${teamId}/add-member`, {
+    update: async (
+      projectId: string,
+      data: Partial<{
+        name: string;
+        description: string;
+        deadline: string;
+        status: string;
+      }>
+    ) => {
+      const result = await request(`/project/update/${projectId}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+      return mapProject(result.data?.project || result.data);
+    },
+    addMember: async (projectId: string, userId: string) => {
+      const result = await request(`/project/${projectId}/add-member`, {
         method: "PUT",
         body: JSON.stringify({ user: userId }),
       });
-      return mapTeam(result.data?.team || result.data);
+      return mapProject(result.data?.project || result.data);
     },
-    removeMember: async (teamId: string, userId: string) => {
-      const result = await request(`/team/remove-member`, {
+    removeMember: async (projectId: string, userId: string) => {
+      const result = await request(`/project/remove-member`, {
         method: "PUT",
-        body: JSON.stringify({ teamId, memberId: userId }),
+        body: JSON.stringify({ projectId, memberId: userId }),
       });
-      return mapTeam(result.data?.team || result.data);
+      return mapProject(result.data?.project || result.data);
     },
-    delete: async (teamId: string) => {
-      await request(`/team/delete-team`, {
+    delete: async (projectId: string) => {
+      await request(`/project/delete-project`, {
         method: "DELETE",
-        body: JSON.stringify({ teamId: teamId }),
+        body: JSON.stringify({ projectId }),
       });
-      return teamId;
+      return projectId;
     },
   },
   tasks: {
-    list: async (teamId: string) => {
+    list: async (projectId: string, filters?: TaskListFilters) => {
       const result = await request(`/task/task-list`, {
         method: "POST",
-        body: JSON.stringify({ teamId: teamId }),
+        body: JSON.stringify({ projectId, ...filters }),
       });
-      // Handle both { data: [tasks] } and { data: { tasks: [] } } structures
-      const tasks = Array.isArray(result.data)
-        ? result.data
-        : result.data?.tasks || [];
-      return Array.isArray(tasks) ? tasks.map(mapTask) : [];
+      const data = result.data || result;
+      const tasks = (data.tasks || []).map(mapTask);
+      return {
+        tasks,
+        total: data.total ?? tasks.length,
+        page: data.page ?? 1,
+        totalPages: data.totalPages ?? 1,
+      };
     },
     create: async (task: Omit<Task, "id" | "createdAt">) => {
       const payload = {
@@ -107,7 +120,7 @@ export const ApiService = {
         assignee: task.assigneeId,
       };
 
-      const result = await request(`/task/create-task/${task.teamId}`, {
+      const result = await request(`/task/create-task/${task.projectId}`, {
         method: "POST",
         body: JSON.stringify(payload),
       });
@@ -115,14 +128,17 @@ export const ApiService = {
       return mapTask(result.data?.task || result.data);
     },
     update: async (taskId: string, updates: Partial<Task>) => {
-      const payload: any = { ...updates };
-      if (updates.assigneeId) {
-        payload.assignee = updates.assigneeId;
+      const payload: Record<string, unknown> = { ...updates };
+      if ("assigneeId" in updates) {
+        payload.assignee =
+          updates.assigneeId == null || updates.assigneeId === ""
+            ? null
+            : updates.assigneeId;
         delete payload.assigneeId;
       }
-      if (updates.teamId) delete payload.teamId;
-      if (updates.creatorId) delete payload.creatorId;
-      if (updates.id) delete payload.id;
+      delete payload.projectId;
+      delete payload.creatorId;
+      delete payload.id;
 
       const result = await request(`/task/update-task/${taskId}`, {
         method: "PUT",
@@ -131,20 +147,82 @@ export const ApiService = {
 
       return mapTask(result.data?.task || result.data);
     },
-    delete: async (taskId: string, teamId: string) => {
+    delete: async (taskId: string, projectId: string) => {
       await request(`/task/delete-task`, {
         method: "DELETE",
-        body: JSON.stringify({ id: taskId, teamId }),
+        body: JSON.stringify({ id: taskId, projectId }),
       });
       return true;
     },
   },
   users: {
     list: async () => {
-      const result = await request("/auth/get-all-users");
-      // const users = result.data || [];
-      const users = Array.isArray(result.data) ? result.data : (result.data?.users || []);
-      return Array.isArray(users) ? users.map(mapUser) : [];
+      const result = await request("/auth/users-for-invite");
+      const users = Array.isArray(result.data?.users)
+        ? result.data.users
+        : Array.isArray(result.data)
+          ? result.data
+          : [];
+      return users.map(mapUser);
+    },
+  },
+  dashboard: {
+    stats: async () => {
+      const result = await request("/dashboard/stats");
+      return result.data?.stats || result.data;
+    },
+    projectSummaries: async () => {
+      const result = await request("/dashboard/project-summaries");
+      return result.data?.summaries || [];
+    },
+    workload: async () => {
+      const result = await request("/dashboard/workload");
+      return result.data?.workload || [];
+    },
+    upcomingDeadlines: async (days = 7) => {
+      const result = await request(
+        `/dashboard/upcoming-deadlines?days=${days}`
+      );
+      return (result.data?.tasks || []).map(mapTask);
+    },
+    highPriority: async () => {
+      const result = await request("/dashboard/high-priority");
+      return (result.data?.tasks || []).map(mapTask);
+    },
+    charts: async () => {
+      const result = await request("/dashboard/charts");
+      return result.data?.charts || result.data;
+    },
+  },
+  activity: {
+    recent: async (limit = 10) => {
+      const result = await request(`/activity/recent?limit=${limit}`);
+      return (result.data?.activities || []).map(mapActivity);
+    },
+  },
+  comments: {
+    list: async (taskId: string) => {
+      const result = await request(`/comment/${taskId}`);
+      return (result.data?.comments || []).map(mapComment);
+    },
+    create: async (taskId: string, text: string) => {
+      const result = await request(`/comment/${taskId}`, {
+        method: "POST",
+        body: JSON.stringify({ text }),
+      });
+      return mapComment(result.data?.comment || result.data);
+    },
+    delete: async (commentId: string) => {
+      await request(`/comment/${commentId}`, { method: "DELETE" });
+    },
+  },
+  notifications: {
+    list: async () => {
+      const result = await request("/notification");
+      return (result.data?.notifications || []).map(mapNotification);
+    },
+    markRead: async (id: string) => {
+      await request(`/notification/${id}/read`, { method: "PUT" });
     },
   },
 };

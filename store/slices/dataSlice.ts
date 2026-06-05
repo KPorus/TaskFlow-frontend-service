@@ -1,30 +1,39 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { DataState } from "../../types";
-import { applyTeamUpdated,setActiveTeam, applyDeleteTeam } from "./helper/teamReducers";
+import {
+  applyProjectUpdated,
+  setActiveProject,
+  applyDeleteProject,
+} from "./helper/projectReducers";
 import { socketReducers } from "./helper/socketReducers";
 import {
-  addTeamMember,
+  addProjectMember,
   createTask,
-  createTeam,
+  createProject,
   deleteTask,
-  deleteTeam,
+  deleteProject,
   fetchAllUsers,
   fetchTasks,
-  fetchTeams,
-  removeTeamMember,
+  fetchProjects,
+  removeProjectMember,
   updateTask,
+  updateProject,
 } from "./helper/dataThunks";
 import {
   applySocketTaskCreated,
   applyTaskDeleted,
   applyTaskUpdated,
+  applyClearMemberTaskAssignees,
 } from "./helper/taskReducers";
 
 const initialState: DataState = {
-  teams: [],
+  projects: [],
   tasks: [],
   users: [],
-  activeTeamId: null,
+  activeProjectId: null,
+  taskTotal: 0,
+  taskPage: 1,
+  taskTotalPages: 1,
   loading: false,
   error: null,
 };
@@ -33,69 +42,103 @@ const dataSlice = createSlice({
   name: "data",
   initialState,
   reducers: {
-    setActiveTeam,
+    setActiveProject,
+    resetAppData: () => initialState,
+    clearDataError: (state) => {
+      state.error = null;
+    },
     ...socketReducers,
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchTeams.fulfilled, (state, action) => {
-        state.teams = action.payload;
-        if (!state.activeTeamId && action.payload.length > 0) {
-          state.activeTeamId = action.payload[0].id;
+      .addCase(fetchProjects.fulfilled, (state, action) => {
+        state.projects = action.payload;
+        if (!state.activeProjectId && action.payload.length > 0) {
+          state.activeProjectId = action.payload[0].id;
         }
       })
-      .addCase(createTeam.fulfilled, (state, action) => {
-        state.teams.push(action.payload);
-        state.activeTeamId = action.payload.id;
-        // applyCreateTeam(state,action)
+      .addCase(createProject.fulfilled, (state, action) => {
+        state.projects.push(action.payload);
+        state.activeProjectId = action.payload.id;
       })
-      .addCase(deleteTeam.fulfilled, (state, action) => {
-        applyDeleteTeam(state, action)
-        // console.log(action.payload);
-        // state.teams = state.teams.filter((t) => t.id !== action.payload);
-        // if (state.activeTeamId === action.payload) {
-        //   state.activeTeamId =
-        //     state.teams.length > 0 ? state.teams[0].id : null;
-        // }
+      .addCase(updateProject.fulfilled, (state, action) => {
+        applyProjectUpdated(state, action);
       })
-      .addCase(addTeamMember.fulfilled, (state, action) => {
-        applyTeamUpdated(state, action);
+      .addCase(deleteProject.fulfilled, (state, action) => {
+        applyDeleteProject(state, action);
       })
-      .addCase(removeTeamMember.fulfilled, (state, action) => {
-        console.log(state,action);
-        applyTeamUpdated(state, action);
+      .addCase(addProjectMember.fulfilled, (state, action) => {
+        applyProjectUpdated(state, action);
+      })
+      .addCase(removeProjectMember.fulfilled, (state, action) => {
+        applyProjectUpdated(state, action);
+        applyClearMemberTaskAssignees(state, {
+          type: "data/clearMemberTaskAssignees",
+          payload: {
+            projectId: action.meta.arg.projectId,
+            memberId: action.meta.arg.userId,
+          },
+        });
       })
       .addCase(fetchTasks.fulfilled, (state, action) => {
-        state.tasks = action.payload;
-        state.loading=false;
+        state.tasks = action.payload.tasks;
+        state.taskTotal = action.payload.total;
+        state.taskPage = action.payload.page;
+        state.taskTotalPages = action.payload.totalPages;
+        state.loading = false;
       })
       .addCase(fetchTasks.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+      .addCase(fetchTasks.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message ?? "Failed to load tasks";
+      })
       .addCase(fetchAllUsers.fulfilled, (state, action) => {
         state.users = action.payload;
+      })
+      .addCase(createTask.pending, (state) => {
+        state.error = null;
       })
       .addCase(createTask.fulfilled, (state, action) => {
         applySocketTaskCreated(state, action);
       })
+      .addCase(createTask.rejected, (state, action) => {
+        state.error = action.error.message ?? "Failed to create task";
+      })
+      .addCase(updateTask.pending, (state) => {
+        state.error = null;
+      })
       .addCase(updateTask.fulfilled, (state, action) => {
         applyTaskUpdated(state, action);
       })
+      .addCase(updateTask.rejected, (state, action) => {
+        state.error = action.error.message ?? "Failed to update task";
+      })
+      .addCase(deleteTask.pending, (state) => {
+        state.error = null;
+      })
       .addCase(deleteTask.fulfilled, (state, action) => {
         applyTaskDeleted(state, action);
+      })
+      .addCase(deleteTask.rejected, (state, action) => {
+        state.error = action.error.message ?? "Failed to delete task";
       });
   },
 });
 
 export const {
-  setActiveTeam: setActiveTeamAction,
+  setActiveProject: setActiveProjectAction,
+  resetAppData,
+  clearDataError,
   socketTaskCreated,
   socketTaskUpdated,
   socketTaskDeleted,
-  socketTeamUpdated,
-  socketTeamDelete
-  // socketTeamCreated,
+  socketProjectUpdated,
+  socketProjectDelete,
+  revokeProjectAccess,
+  clearMemberTaskAssignees,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

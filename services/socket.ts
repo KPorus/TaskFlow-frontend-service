@@ -1,7 +1,9 @@
 import { io, Socket } from "socket.io-client";
 
-const URL = "https://task-monitor-backend-service.onrender.com";
-// const URL = "http://localhost:5001";
+const URL =
+  import.meta.env.VITE_SOCKET_URL ||
+  import.meta.env.VITE_BASE_URL?.replace("/api/v1", "") ||
+  "http://localhost:5000";
 
 export const socket: Socket = io(URL, {
   transports: ["websocket"],
@@ -14,16 +16,19 @@ export const socket: Socket = io(URL, {
 });
 
 export const SOCKET_EVENTS = {
-  // Client -> Server
-  JOIN_TEAM: "joinTeam",
-
-  // Server -> Client
+  JOIN_PROJECT: "joinProject",
+  JOIN_USER: "joinUser",
   TASK_CREATED: "taskCreated",
   TASK_UPDATED: "taskUpdate",
   TASK_ASSIGNED: "taskAssign",
   TASK_DELETED: "taskDelete",
-
-  TEAM_DELETE: "teamDeleted",
-  TEAM_MEMBER_ADDED: "teamMemberAdd",
-  TEAM_MEMBER_REMOVED: "teamMemberRemove",
+  PROJECT_DELETE: "projectDeleted",
+  PROJECT_MEMBER_ADDED: "projectMemberAdd",
+  PROJECT_MEMBER_REMOVED: "projectMemberRemove",
+  PROJECT_UPDATED: "projectUpdated",
+  COMMENT_ADDED: "commentAdded",
+  COMMENT_DELETED: "commentDeleted",
+  NOTIFICATION: "notification",
+  MEMBERSHIP_CHANGED: "membershipChanged",
+  MEMBER_ASSIGNEES_CLEARED: "memberAssigneesCleared",
 };

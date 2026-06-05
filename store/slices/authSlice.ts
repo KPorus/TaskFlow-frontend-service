@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { AuthState } from "../../types";
-import { loginUser, registerUser, loadUser } from "./helper/authThunks";
+import { loginUser, registerUser, loadUser, logoutUser } from "./helper/authThunks";
 import {
   loadAuthFromStorage,
   persistAuthToStorage,
@@ -20,14 +20,7 @@ const initialState: AuthState = {
 const authSlice = createSlice({
   name: "auth",
   initialState,
-  reducers: {
-    logout: (state) => {
-      clearAuthFromStorage();
-      state.user = null;
-      state.token = null;
-      state.isAuthenticated = false;
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(loginUser.pending, (state) => {
@@ -60,15 +53,31 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || "Registration failed";
       })
+      .addCase(loadUser.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(loadUser.fulfilled, (state, action) => {
+        state.loading = false;
         state.isAuthenticated = true;
-        state.user = action.payload;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        persistAuthToStorage(action.payload.user, action.payload.token);
       })
       .addCase(loadUser.rejected, (state) => {
+        state.loading = false;
         state.isAuthenticated = false;
+        state.user = null;
+        state.token = null;
+        clearAuthFromStorage();
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.loading = false;
+        state.error = null;
       });
   },
 });
 
-export const { logout } = authSlice.actions;
 export default authSlice.reducer;
