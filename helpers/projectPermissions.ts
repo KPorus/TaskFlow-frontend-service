@@ -1,4 +1,4 @@
-import { Project, User, UserRole } from "@/types";
+import { Project, Task, User, UserRole } from "@/types";
 
 /** Map legacy JWT/DB roles to USER */
 export const normalizeUserRole = (role?: string): UserRole => {
@@ -29,3 +29,13 @@ export const hasProjectAccess = (
   projectId: string,
   projects: Project[],
 ): boolean => projects.some((p) => p.id === projectId);
+
+export const canUpdateTask = (
+  task: Pick<Task, "assigneeId">,
+  project: Pick<Project, "ownerId"> | null | undefined,
+  user?: User | null,
+): boolean => {
+  if (!user || !project) return false;
+  if (isAdmin(user) || isProjectOwner(project, user.id)) return true;
+  return !!task.assigneeId && task.assigneeId === user.id;
+};

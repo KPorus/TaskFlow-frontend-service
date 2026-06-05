@@ -52,7 +52,7 @@ export interface Task {
   description: string;
   status: TaskStatus;
   priority: TaskPriority;
-  assigneeId?: string;
+  assigneeId?: string | null;
   projectId: string;
   creatorId: string;
   dueDate?: string;

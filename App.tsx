@@ -6,7 +6,8 @@ import { AuthScreen } from "./components/auth/AuthScreen";
 import { BoardView } from "./components/board/BoardView";
 import { DashboardLayout } from "./screen/DashboardLayout";
 import { DashboardHome } from "./components/dashboard/DashboardHome";
-import { loadUser } from "./store/slices/helper/authThunks";
+import { loadUser, logoutUser } from "./store/slices/helper/authThunks";
+import { SESSION_EXPIRED_EVENT } from "./helpers/sessionEvents";
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -16,6 +17,16 @@ const App: React.FC = () => {
 
   useEffect(() => {
     dispatch(loadUser());
+  }, [dispatch]);
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      dispatch(logoutUser());
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () => {
+      window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    };
   }, [dispatch]);
 
   if (authLoading) {

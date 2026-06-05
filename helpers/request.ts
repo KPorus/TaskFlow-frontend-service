@@ -1,3 +1,5 @@
+import { emitSessionExpired } from "./sessionEvents";
+
 const BASE_URL =
   import.meta.env.VITE_BASE_URL || "http://localhost:5000/api/v1";
 
@@ -63,6 +65,7 @@ export async function request(
 
     localStorage.removeItem(KEYS.TOKEN);
     localStorage.removeItem(KEYS.USER_DATA);
+    emitSessionExpired();
     throw new Error("Session expired");
   }
 

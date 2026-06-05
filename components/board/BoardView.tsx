@@ -23,6 +23,7 @@ import {
 } from "../../types";
 import {
   canManageProject,
+  canUpdateTask,
   hasProjectAccess,
 } from "@/helpers/projectPermissions";
 import { BoardColumn } from "./BoardColumn";
@@ -31,6 +32,7 @@ import { TaskFormModal } from "../model/TaskFormModal";
 import { DeleteTaskConfirmModal } from "../model/DeleteTaskConfirmModal";
 import { ProjectSettingsModal } from "../model/ProjectSettingsModal";
 import { setActiveProjectAction } from "@/store/slices/dataSlice";
+import { TASKS_PAGE_LIMIT } from "@/store/slices/helper/taskReducers";
 import { SearchBar } from "../search/SearchBar";
 import { TaskFilters } from "../search/TaskFilters";
 import { SortControls } from "../search/SortControls";
@@ -97,7 +99,7 @@ export const BoardView: React.FC = () => {
       sortBy: sortBy as TaskListFilters["sortBy"],
       sortOrder,
       page,
-      limit: 50,
+      limit: TASKS_PAGE_LIMIT,
     };
     dispatch(
       fetchTasks({ projectId: activeProjectId, filters })
@@ -125,7 +127,14 @@ export const BoardView: React.FC = () => {
     loadTasks();
   }, [loadTasks]);
 
+  const canUpdateTaskForUser = useCallback(
+    (task: Task) => canUpdateTask(task, currentProject, currentUser),
+    [currentProject, currentUser],
+  );
+
   const handleDropTask = (taskId: string, newStatus: TaskStatus) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task || !canUpdateTaskForUser(task)) return;
     dispatch(updateTask({ taskId, updates: { status: newStatus } }));
   };
 
@@ -137,6 +146,7 @@ export const BoardView: React.FC = () => {
   };
 
   const openEditTaskModal = (task: Task) => {
+    if (!canUpdateTaskForUser(task)) return;
     setEditingTask(task);
     setIsTaskModalOpen(true);
   };
@@ -154,42 +164,54 @@ export const BoardView: React.FC = () => {
       title: payload.title,
       description: payload.description,
       priority: payload.priority,
-      assigneeId: payload.assigneeId || undefined,
+      assigneeId: editingTask
+        ? payload.assigneeId === ""
+          ? null
+          : payload.assigneeId || undefined
+        : payload.assigneeId || undefined,
       dueDate: payload.dueDate
         ? new Date(payload.dueDate).toISOString()
         : undefined,
     };
 
-    if (editingTask) {
-      await dispatch(
-        updateTask({ taskId: editingTask.id, updates: taskData })
-      );
-    } else {
-      await dispatch(
-        createTask({
-          ...taskData,
-          status: newTaskStatus,
-          projectId,
-          creatorId: currentUser.id,
-        })
-      );
+    try {
+      if (editingTask) {
+        await dispatch(
+          updateTask({ taskId: editingTask.id, updates: taskData }),
+        ).unwrap();
+      } else {
+        await dispatch(
+          createTask({
+            ...taskData,
+            status: newTaskStatus,
+            projectId,
+            creatorId: currentUser.id,
+          }),
+        ).unwrap();
+      }
+      setIsTaskModalOpen(false);
+      setEditingTask(null);
+      loadTasks();
+    } catch {
+      // error shown via data.error banner
     }
-    setIsTaskModalOpen(false);
-    setEditingTask(null);
-    loadTasks();
   };
 
   const handleDeleteTask = async () => {
-    if (editingTask?.projectId) {
+    if (!editingTask?.projectId) return;
+    try {
       await dispatch(
         deleteTask({
           taskId: editingTask.id,
           projectId: editingTask.projectId,
         })
-      );
+      ).unwrap();
       setIsDeleteConfirmOpen(false);
       setIsTaskModalOpen(false);
       setEditingTask(null);
+      loadTasks();
+    } catch {
+      // error stored in state.data.error
     }
   };
 
@@ -230,6 +252,7 @@ export const BoardView: React.FC = () => {
     editingTask &&
     currentUser &&
     (editingTask.creatorId === currentUser.id || canManage);
+  // const canDeleteTask = !!(editingTask && canManage);
 
   const projectMembers: User[] =
     currentProject?.members
@@ -292,6 +315,7 @@ export const BoardView: React.FC = () => {
               status={status}
               tasks={tasks.filter((t) => t.status === status)}
               users={projectMembers}
+              canUpdateTask={canUpdateTaskForUser}
               onDropTask={handleDropTask}
               onAddTask={openNewTaskModal}
               onEditTask={openEditTaskModal}
@@ -316,6 +340,8 @@ export const BoardView: React.FC = () => {
         onSubmit={handleCreateOrUpdateTask}
         task={editingTask}
         canDelete={!!canDeleteTask}
+        canManageComments={!!canManage}
+        currentUser={currentUser}
         users={projectMembers}
         onRequestDelete={() => setIsDeleteConfirmOpen(true)}
       />

@@ -1,6 +1,8 @@
 import { PayloadAction } from "@reduxjs/toolkit";
 import { DataState, Task } from "../../../types";
 
+export const TASKS_PAGE_LIMIT = 50;
+
 export const applySocketTaskCreated = (
   state: DataState,
   action: PayloadAction<Task>
@@ -24,9 +26,19 @@ export const applyTaskUpdated = (
 
 export const applyTaskDeleted = (
   state: DataState,
-  action: PayloadAction<string>
+  action: PayloadAction<string>,
 ) => {
-  state.tasks = state.tasks.filter((t) => t.id !== action.payload);
+  const id = String(action.payload);
+  const hadTask = state.tasks.some((t) => String(t.id) === id);
+  state.tasks = state.tasks.filter((t) => String(t.id) !== id);
+
+  if (hadTask) {
+    state.taskTotal = Math.max(0, state.taskTotal - 1);
+    state.taskTotalPages = Math.max(
+      1,
+      Math.ceil(state.taskTotal / TASKS_PAGE_LIMIT),
+    );
+  }
 };
 
 export type ClearMemberTaskAssigneesPayload = {

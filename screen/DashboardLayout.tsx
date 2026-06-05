@@ -9,6 +9,8 @@ import { useProjectSocket } from "@/hooks/useProjectSocket";
 import { useMembershipSync } from "@/hooks/useMembershipSync";
 import { fetchProjects } from "@/store/slices/helper/dataThunks";
 import { fetchNotifications } from "@/store/slices/notificationSlice";
+import { clearDataError } from "@/store/slices/dataSlice";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { socket, SOCKET_EVENTS } from "@/services/socket";
 
 export type DashboardLayoutContext = {
@@ -18,7 +20,9 @@ export type DashboardLayoutContext = {
 export const DashboardLayout: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { activeProjectId } = useSelector((state: RootState) => state.data);
+  const { activeProjectId, error: dataError } = useSelector(
+    (state: RootState) => state.data,
+  );
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -78,6 +82,12 @@ export const DashboardLayout: React.FC = () => {
         <div className="absolute top-3 right-4 z-10 lg:top-3">
           <NotificationBell />
         </div>
+        {dataError && (
+          <ErrorBanner
+            message={dataError}
+            onDismiss={() => dispatch(clearDataError())}
+          />
+        )}
         <Outlet context={outletContext} />
       </main>
     </div>

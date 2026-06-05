@@ -5,6 +5,7 @@ import { Calendar, User as UserIcon } from 'lucide-react';
 interface TaskCardProps {
   task: Task;
   assignee?: User;
+  canUpdate: boolean;
   onDragStart: (e: React.DragEvent, taskId: string) => void;
   onClick: (task: Task) => void;
 }
@@ -22,16 +23,34 @@ const PriorityBadge = ({ priority }: { priority: TaskPriority }) => {
   );
 };
 
-export const TaskCard: React.FC<TaskCardProps> = ({ task, assignee, onDragStart, onClick }) => {
+export const TaskCard: React.FC<TaskCardProps> = ({
+  task,
+  assignee,
+  canUpdate,
+  onDragStart,
+  onClick,
+}) => {
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
 
   return (
     <div
     id="task-card--ts"
-      draggable
-      onDragStart={(e) => onDragStart(e, task.id)}
-      onClick={() => onClick(task)}
-      className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 cursor-move hover:shadow-md transition-shadow mb-3 active:cursor-grabbing"
+      draggable={canUpdate}
+      onDragStart={(e) => {
+        if (!canUpdate) {
+          e.preventDefault();
+          return;
+        }
+        onDragStart(e, task.id);
+      }}
+      onClick={() => {
+        if (canUpdate) onClick(task);
+      }}
+      className={`bg-white p-3 rounded-lg shadow-sm border border-gray-200 mb-3 transition-shadow ${
+        canUpdate
+          ? "cursor-pointer hover:shadow-md active:cursor-grabbing"
+          : "cursor-default opacity-90"
+      }`}
     >
       <div className="flex justify-between items-start mb-2">
         <PriorityBadge priority={task.priority} />

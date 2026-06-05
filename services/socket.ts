@@ -27,6 +27,7 @@ export const SOCKET_EVENTS = {
   PROJECT_MEMBER_REMOVED: "projectMemberRemove",
   PROJECT_UPDATED: "projectUpdated",
   COMMENT_ADDED: "commentAdded",
+  COMMENT_DELETED: "commentDeleted",
   NOTIFICATION: "notification",
   MEMBERSHIP_CHANGED: "membershipChanged",
   MEMBER_ASSIGNEES_CLEARED: "memberAssigneesCleared",

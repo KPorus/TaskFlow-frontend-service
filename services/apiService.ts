@@ -129,8 +129,11 @@ export const ApiService = {
     },
     update: async (taskId: string, updates: Partial<Task>) => {
       const payload: Record<string, unknown> = { ...updates };
-      if (updates.assigneeId) {
-        payload.assignee = updates.assigneeId;
+      if ("assigneeId" in updates) {
+        payload.assignee =
+          updates.assigneeId == null || updates.assigneeId === ""
+            ? null
+            : updates.assigneeId;
         delete payload.assigneeId;
       }
       delete payload.projectId;

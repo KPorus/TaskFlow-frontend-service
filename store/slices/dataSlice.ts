@@ -44,6 +44,9 @@ const dataSlice = createSlice({
   reducers: {
     setActiveProject,
     resetAppData: () => initialState,
+    clearDataError: (state) => {
+      state.error = null;
+    },
     ...socketReducers,
   },
   extraReducers: (builder) => {
@@ -88,17 +91,39 @@ const dataSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
+      .addCase(fetchTasks.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message ?? "Failed to load tasks";
+      })
       .addCase(fetchAllUsers.fulfilled, (state, action) => {
         state.users = action.payload;
+      })
+      .addCase(createTask.pending, (state) => {
+        state.error = null;
       })
       .addCase(createTask.fulfilled, (state, action) => {
         applySocketTaskCreated(state, action);
       })
+      .addCase(createTask.rejected, (state, action) => {
+        state.error = action.error.message ?? "Failed to create task";
+      })
+      .addCase(updateTask.pending, (state) => {
+        state.error = null;
+      })
       .addCase(updateTask.fulfilled, (state, action) => {
         applyTaskUpdated(state, action);
       })
+      .addCase(updateTask.rejected, (state, action) => {
+        state.error = action.error.message ?? "Failed to update task";
+      })
+      .addCase(deleteTask.pending, (state) => {
+        state.error = null;
+      })
       .addCase(deleteTask.fulfilled, (state, action) => {
         applyTaskDeleted(state, action);
+      })
+      .addCase(deleteTask.rejected, (state, action) => {
+        state.error = action.error.message ?? "Failed to delete task";
       });
   },
 });
@@ -106,6 +131,7 @@ const dataSlice = createSlice({
 export const {
   setActiveProject: setActiveProjectAction,
   resetAppData,
+  clearDataError,
   socketTaskCreated,
   socketTaskUpdated,
   socketTaskDeleted,
