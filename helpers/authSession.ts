@@ -3,7 +3,7 @@ import { User } from "@/types";
 import { KEYS } from "@/helpers/request";
 
 const BASE_URL =
-  import.meta.env.VITE_BASE_URL || "http://localhost:5000/api/v1";
+  import.meta.env.VITE_BASE_URL || "https://taskflow-backend-service-production.up.railway.app/api/v1";
 
 export const clearStoredSession = () => {
   localStorage.removeItem(KEYS.TOKEN);
