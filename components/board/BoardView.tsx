@@ -22,6 +22,7 @@ import {
   TaskListFilters,
 } from "../../types";
 import {
+  canCreateTask,
   canManageProject,
   canUpdateTask,
   hasProjectAccess,
@@ -127,18 +128,18 @@ export const BoardView: React.FC = () => {
     loadTasks();
   }, [loadTasks]);
 
-  const canUpdateTaskForUser = useCallback(
-    (task: Task) => canUpdateTask(task, currentProject, currentUser),
-    [currentProject, currentUser],
-  );
+  const canCreate = canCreateTask(currentProject, currentUser);
+  const canUpdate = canUpdateTask(currentProject, currentUser);
 
   const handleDropTask = (taskId: string, newStatus: TaskStatus) => {
+    if (!canUpdate) return;
     const task = tasks.find((t) => t.id === taskId);
-    if (!task || !canUpdateTaskForUser(task)) return;
+    if (!task) return;
     dispatch(updateTask({ taskId, updates: { status: newStatus } }));
   };
 
   const openNewTaskModal = (status: TaskStatus) => {
+    if (!canCreate) return;
     setEditingTask(null);
     setNewTaskStatus(status);
     setTaskFormKey((k) => k + 1);
@@ -146,7 +147,7 @@ export const BoardView: React.FC = () => {
   };
 
   const openEditTaskModal = (task: Task) => {
-    if (!canUpdateTaskForUser(task)) return;
+    if (!canUpdate) return;
     setEditingTask(task);
     setIsTaskModalOpen(true);
   };
@@ -176,10 +177,12 @@ export const BoardView: React.FC = () => {
 
     try {
       if (editingTask) {
+        if (!canUpdate) return;
         await dispatch(
           updateTask({ taskId: editingTask.id, updates: taskData }),
         ).unwrap();
       } else {
+        if (!canCreate) return;
         await dispatch(
           createTask({
             ...taskData,
@@ -315,7 +318,8 @@ export const BoardView: React.FC = () => {
               status={status}
               tasks={tasks.filter((t) => t.status === status)}
               users={projectMembers}
-              canUpdateTask={canUpdateTaskForUser}
+              canCreateTask={canCreate}
+              canUpdateTask={canUpdate}
               onDropTask={handleDropTask}
               onAddTask={openNewTaskModal}
               onEditTask={openEditTaskModal}
