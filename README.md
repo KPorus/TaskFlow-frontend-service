@@ -2,20 +2,40 @@
 
 React + Vite client for **TaskFlow** — Smart Project & Task Collaboration System.
 
-Companion backend: [`TaskFlow-backend-service`](https://github.com/KPorus/TaskFlow-backend-service/blob/main/README.md)
+Companion backend: [`TaskFlow-backend-service`](https://github.com/KPorus/TaskFlow-backend-service)
 
 ---
 
-## Purpose & Description
+## Table of Contents
+
+- [Features Overview](#features-overview)
+- [Project Setup](#project-setup)
+- [Environment Variables](#environment-variables)
+- [Demo Credentials](#demo-credentials)
+- [Deployment](#deployment)
+- [Role Model](#role-model)
+- [Permissions (UI Gates)](#permissions-ui-gates)
+- [System Architecture](#system-architecture)
+- [Routes & Pages](#routes--pages)
+- [File Structure](#file-structure)
+- [Future Features (Roadmap)](#future-features-roadmap)
+
+---
+
+## Features Overview
 
 TaskFlow is a real-time Kanban project management platform for teams. The frontend provides:
 
-- Authentication (login, register, demo login)
-- Dashboard with KPIs, charts, activity feed, workload, and deadlines
-- Project-scoped Kanban board with drag-and-drop, search, filter, sort, and pagination
-- Task create/edit modal with assignee selection and flat comments
-- Project settings for membership management
-- Real-time updates and notifications via Socket.IO
+| Area | Capabilities |
+|------|--------------|
+| **Authentication** | Email/password login, registration, and one-click demo login |
+| **Dashboard** | KPI cards, task charts, project summary, activity feed, workload view, upcoming deadlines, high-priority tasks |
+| **Kanban board** | Project-scoped board with drag-and-drop status changes, search, filters, sort, and pagination |
+| **Tasks** | Create/edit modal with title, description, status, priority, due date, assignee, and flat comments |
+| **Projects** | Sidebar project list, project settings (add/remove members, delete project) |
+| **Real-time** | Live task, project, membership, and notification updates via Socket.IO |
+| **Notifications** | In-app notification bell with unread badge and toast messages |
+| **Access control** | UI gates for global (`ADMIN` / `USER`) and project (`OWNER` / `MEMBER`) roles |
 
 ### Tech Stack
 
@@ -30,6 +50,117 @@ TaskFlow is a real-time Kanban project management platform for teams. The fronte
 | Icons | Lucide React |
 | Real-time | Socket.IO Client |
 | Styling | Tailwind-style utility classes |
+
+---
+
+## Project Setup
+
+### Prerequisites
+
+- **Node.js** 18+ and **pnpm** (recommended) or **npm**
+- **TaskFlow backend** running locally or deployed — see [backend README](https://github.com/KPorus/TaskFlow-backend-service/blob/main/README.md)
+
+### Local development
+
+```bash
+# Clone and enter the repo
+git clone <your-repo-url>
+cd TaskFlow-frontend-service
+
+# Install dependencies
+pnpm install   # or: npm install
+
+# Configure environment (see Environment Variables below)
+cp .env.example .env
+
+# Start the dev server (port 3000)
+pnpm run dev   # or: npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+Ensure the backend API is reachable at `http://localhost:5000/api/v1` (default from `.env.example`).
+
+### Scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm run dev` / `npm run dev` | Development server on port **3000** |
+| `pnpm run build` / `npm run build` | Production build → `dist/` |
+| `pnpm run preview` / `npm run preview` | Preview production build on port **4173** |
+
+---
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and adjust for your environment. Vite exposes only variables prefixed with `VITE_`.
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_BASE_URL` | Backend REST API base URL | `http://localhost:5001/api/v1` |
+| `VITE_SOCKET_URL` | Socket.IO server URL (no `/api/v1` path) | `http://localhost:5001` |
+
+
+For production, set both variables to your deployed backend origin before running `build`.
+
+---
+
+## Demo Credentials
+
+Use these accounts to explore the app without registering, or click **Demo Login (Admin)** on the sign-in screen.
+
+| Account | Email | Password | Global role |
+|---------|-------|----------|-------------|
+| Admin | `admin@taskflow.com` | `Admin@123` | `ADMIN` |
+
+The demo admin has full access across all projects and system dashboard features. The backend must be running with seeded demo data for login to succeed.
+
+---
+
+## Deployment
+
+The frontend is a static SPA. Build once, then host the `dist/` folder on any static file host.
+
+### 1. Configure environment
+
+Set production values for:
+
+- `VITE_BASE_URL` — e.g. `https://api.yourdomain.com/api/v1`
+- `VITE_SOCKET_URL` — e.g. `https://api.yourdomain.com`
+
+These are baked in at **build time**; rebuild after changing them.
+
+### 2. Build
+
+```bash
+pnpm install
+pnpm run build   # or: npm run build
+```
+
+Output is written to `dist/`.
+
+### 3. Host static files
+
+| Platform | Build command | Output directory | Notes |
+|----------|---------------|------------------|-------|
+| **Vercel** | `npm run build` | `dist` | Set `VITE_*` env vars in project settings; `vercel.json` includes SPA rewrites |
+<!-- | **Netlify** | `npm run build` | `dist` | Add `VITE_*` in Site settings → Environment variables |
+| **Nginx / S3 / CDN** | — | Upload `dist/` contents | Serve `index.html` for unknown paths if not using hash routes | -->
+
+The app uses **`HashRouter`** (`/#/dashboard`, etc.), so deep links work without server-side rewrite rules. SPA rewrites in `vercel.json` are included as a fallback for hosts that need them.
+
+### 4. Backend requirements
+
+- Backend CORS must allow your frontend origin.
+- Socket.IO must be reachable at `VITE_SOCKET_URL` with JWT auth enabled.
+
+### Local preview of production build
+
+```bash
+pnpm run preview
+```
+
+Opens the built app at [http://localhost:3000](http://localhost:3000).
 
 ---
 
@@ -53,13 +184,7 @@ TaskFlow uses **two layers** of roles. The UI gates features based on both.
 
 Defined and checked in `helpers/projectPermissions.ts`.
 
-### Demo accounts
-
-| Account | Global role | Typical project role |
-|---------|-------------|----------------------|
-| `admin@taskflow.com` | `ADMIN` | Full access everywhere |
-
-The **Demo Login** button on the sign-in screen logs in as **Admin** (`admin@taskflow.com`).
+For demo login details, see [Demo Credentials](#demo-credentials).
 
 ---
 
@@ -487,57 +612,10 @@ TaskFlow-frontend-service/
 
 ---
 
-## Setup
-
-```bash
-cd TaskFlow-frontend-service
-pnpm install   # or npm install
-cp .env.example .env
-pnpm run dev   # or npm run dev
-```
-
-Open `http://localhost:3000` (configured in `vite.config.ts`).
-
-Ensure the backend is running at `http://localhost:5000/api/v1`.
-
-### Environment variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `VITE_BASE_URL` | Backend API base | `http://localhost:5000/api/v1` |
-| `VITE_SOCKET_URL` | Socket.IO server | `http://localhost:5000` |
-
-### Demo credentials
-
-| Account | Email | Password |
-|---------|-------|----------|
-| Admin | admin@taskflow.com | Admin@123 |
-
-### Scripts
-
-| Command | Description |
-|---------|-------------|
-| `pnpm run dev` / `npm run dev` | Development server (port 3000) |
-| `pnpm run build` / `npm run build` | Production build → `dist/` |
-| `pnpm run preview` / `npm run preview` | Preview build on port 4173 |
-
----
-
-## Deployment
-
-1. Set `VITE_BASE_URL` and `VITE_SOCKET_URL` to your deployed backend.
-2. Run `pnpm run build` (or `npm run build`).
-3. Host `dist/` on Vercel, Netlify, or any static host.
-
-`HashRouter` does not require server-side rewrite rules. `vercel.json` includes SPA rewrites as a fallback.
-
----
-
 ## Future Features (Roadmap)
 
 Planned improvements not yet implemented:
-
-- Align task-delete UI with backend (hide delete for creators who are not owners)
+- Otp based login system
 - Granular project roles (viewer / editor) with UI gates per role
 - Email and push notifications
 - Task attachments and rich-text editor
