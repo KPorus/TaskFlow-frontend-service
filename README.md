@@ -2,7 +2,7 @@
 
 React + Vite client for **TaskFlow** — Smart Project & Task Collaboration System.
 
-Companion backend: [`../TaskFlow-backend-service/README.md`](../TaskFlow-backend-service/README.md)
+Companion backend: [`TaskFlow-backend-service`](https://github.com/KPorus/TaskFlow-backend-service/blob/main/README.md)
 
 ---
 
