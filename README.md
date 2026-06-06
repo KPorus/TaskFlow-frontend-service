@@ -625,9 +625,3 @@ Planned improvements not yet implemented:
 - `@mentions` in comments
 - Project templates
 - Improved mobile layout and PWA support
-
----
-
-## Related
-
-- Backend API: [`../TaskFlow-backend-service`](../TaskFlow-backend-service)
